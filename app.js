@@ -12,6 +12,8 @@ const store = {
 let mine = store.get('timers', []).map(E.normalize).filter(t => t.id);
 const settings = Object.assign({ voice: false, vibrate: true, half: false }, store.get('settings', {}));
 const saveMine = () => store.set('timers', mine);
+let favs = new Set(store.get('favs', []));
+const saveFavs = () => store.set('favs', [...favs]);
 
 let toastT;
 function toast(msg, ms = 3000) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms); }
@@ -25,20 +27,30 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5l13 7.5-13 7.5z"/></svg>';
 function card(t, preset) {
   const total = E.fmtTime(E.totalDuration(E.compile(t)) - E.LEAD_IN);
-  return `<li class="card"><div class="info"><h3>${esc(t.name)}</h3>
+  const fav = favs.has(t.id);
+  return `<li class="card"><div class="info"><h3>${esc(t.name)}<button class="star${fav ? ' on' : ''}" data-fav="${esc(t.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favourites">${fav ? '★' : '☆'}</button></h3>
     <div class="meta"><b>${esc(E.summary(t))}</b> · ${total}</div>${preset && t.blurb ? `<div class="blurb">${esc(t.blurb)}</div>` : ''}
     <button class="link" data-edit="${esc(t.id)}">${preset ? 'Customise' : 'Edit'}</button></div>
     <button class="play" data-start="${esc(t.id)}" aria-label="Start ${esc(t.name)}">${PLAY}</button></li>`;
 }
 function renderHome() {
-  $('#mineHead').hidden = !mine.length;
-  $('#mineList').innerHTML = mine.map(t => card(t, false)).join('');
-  $('#presetList').innerHTML = E.PRESETS.map(t => card(t, true)).join('');
+  const all = [...mine.map(t => [t, false]), ...E.PRESETS.map(t => [t, true])];
+  favs = new Set([...favs].filter(id => all.some(([t]) => t.id === id)));   // forget favourites that were deleted
+  const fv = [...favs].map(id => all.find(([t]) => t.id === id)).filter(Boolean);
+  $('#favHead').hidden = !fv.length;
+  $('#favList').innerHTML = fv.map(([t, p]) => card(t, p)).join('');
+  const myRest = mine.filter(t => !favs.has(t.id));
+  $('#mineHead').hidden = !myRest.length;
+  $('#mineList').innerHTML = myRest.map(t => card(t, false)).join('');
+  const pr = E.PRESETS.filter(t => !favs.has(t.id));
+  $('#presetHead').hidden = !pr.length;
+  $('#presetList').innerHTML = pr.map(t => card(t, true)).join('');
 }
 const findTimer = id => mine.find(t => t.id === id) || E.PRESETS.find(t => t.id === id);
 document.addEventListener('click', e => {
-  const s = e.target.closest('[data-start]'), ed = e.target.closest('[data-edit]');
-  if (s) { const t = findTimer(s.dataset.start); if (t) startRun(t); }
+  const s = e.target.closest('[data-start]'), ed = e.target.closest('[data-edit]'), fv = e.target.closest('[data-fav]');
+  if (fv) { const id = fv.dataset.fav; if (favs.has(id)) favs.delete(id); else favs.add(id); saveFavs(); renderHome(); toast(favs.has(id) ? 'Added to favourites.' : 'Removed from favourites.', 1800); }
+  else if (s) { const t = findTimer(s.dataset.start); if (t) startRun(t); }
   else if (ed) { const t = findTimer(ed.dataset.edit); if (t) openEditor(t, !t.id.startsWith('u-')); }
 });
 
@@ -93,7 +105,7 @@ $('#btnSave').onclick = () => { saveForm(); toast('Saved.'); renderHome(); show(
 $('#btnEditStart').onclick = () => startRun(formTimer());
 $('#btnDelete').onclick = function () {
   if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to delete'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Delete'; }, 3000); return; }
-  mine = mine.filter(x => x.id !== editing.id); saveMine(); delete this.dataset.arm; this.textContent = 'Delete'; renderHome(); show('home'); toast('Deleted.');
+  mine = mine.filter(x => x.id !== editing.id); saveMine(); favs.delete(editing.id); saveFavs(); delete this.dataset.arm; this.textContent = 'Delete'; renderHome(); show('home'); toast('Deleted.');
 };
 
 /* ---------- settings ---------- */

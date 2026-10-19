@@ -8,17 +8,18 @@
   color-scheme:light dark;
 }
 @media (prefers-color-scheme:dark){
-  :root{--ink:#EDEAE4; --paper:#121317; --card:#1C1E23; --line:#2C2F36; --muted:#9A978F}
+  :root:not([data-theme="light"]){--ink:#EDEAE4; --paper:#121317; --card:#1C1E23; --line:#2C2F36; --muted:#9A978F; color-scheme:dark}
 }
+:root[data-theme="dark"]{--ink:#EDEAE4; --paper:#121317; --card:#1C1E23; --line:#2C2F36; --muted:#9A978F; color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.45 var(--f-sans);-webkit-tap-highlight-color:transparent;
-  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+  padding-block:env(safe-area-inset-top,0) env(safe-area-inset-bottom,0)}
 [hidden]{display:none!important}
 button{font:inherit;color:inherit;cursor:pointer}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.screen{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+.screen{max-width:560px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
 /* wordmark: the O is the timer ring */
 .wm{display:flex;align-items:center;gap:.04em;margin:0;font-size:44px;line-height:1;font-weight:700;font-stretch:80%;letter-spacing:.02em}
@@ -123,3 +124,8 @@ body[data-phase="done"]{--ph:var(--done);--ph-ink:#fff}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:15px;max-width:90vw;z-index:9}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* favourite star */
+.card h3{display:flex;align-items:center;gap:6px}
+.star{border:none;background:none;padding:2px 4px;font-size:20px;line-height:1;color:var(--muted)}
+.star.on{color:#E8A20C}
