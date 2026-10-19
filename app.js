@@ -1,0 +1,232 @@
+/* Rounds: screens, storage, sound. Everything stays on this device. */
+'use strict';
+const VERSION = '1.0.0';
+const $ = s => document.querySelector(s);
+const E = window.Engine;
+
+/* ---------- storage (localStorage; the app works without it) ---------- */
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem('rounds.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('rounds.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+let mine = store.get('timers', []).map(E.normalize).filter(t => t.id);
+const settings = Object.assign({ voice: false, vibrate: true, half: false }, store.get('settings', {}));
+const saveMine = () => store.set('timers', mine);
+
+let toastT;
+function toast(msg, ms = 3000) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, ms); }
+function show(id) {
+  for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== id;
+  document.body.dataset.screen = id; window.scrollTo(0, 0);
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---------- home ---------- */
+const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5l13 7.5-13 7.5z"/></svg>';
+function card(t, preset) {
+  const total = E.fmtTime(E.totalDuration(E.compile(t)) - E.LEAD_IN);
+  return `<li class="card"><div class="info"><h3>${esc(t.name)}</h3>
+    <div class="meta"><b>${esc(E.summary(t))}</b> · ${total}</div>${preset && t.blurb ? `<div class="blurb">${esc(t.blurb)}</div>` : ''}
+    <button class="link" data-edit="${esc(t.id)}">${preset ? 'Customise' : 'Edit'}</button></div>
+    <button class="play" data-start="${esc(t.id)}" aria-label="Start ${esc(t.name)}">${PLAY}</button></li>`;
+}
+function renderHome() {
+  $('#mineHead').hidden = !mine.length;
+  $('#mineList').innerHTML = mine.map(t => card(t, false)).join('');
+  $('#presetList').innerHTML = E.PRESETS.map(t => card(t, true)).join('');
+}
+const findTimer = id => mine.find(t => t.id === id) || E.PRESETS.find(t => t.id === id);
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-start]'), ed = e.target.closest('[data-edit]');
+  if (s) { const t = findTimer(s.dataset.start); if (t) startRun(t); }
+  else if (ed) { const t = findTimer(ed.dataset.edit); if (t) openEditor(t, !t.id.startsWith('u-')); }
+});
+
+/* ---------- editor ---------- */
+let editing = null, editIsCopy = false;
+const STEP = v => v < 60 ? 5 : v < 300 ? 15 : 30;
+function stepper(el) {
+  const kind = el.dataset.kind, min = +(el.dataset.min || 0), max = +(el.dataset.max || 3600);
+  el.innerHTML = `<button type="button" aria-label="Less">−</button><input inputmode="${kind === 'time' ? 'text' : 'numeric'}" aria-label="${el.closest('.field').querySelector('span').textContent}"><button type="button" aria-label="More">+</button>`;
+  const inp = el.querySelector('input'), [dec, inc] = el.querySelectorAll('button');
+  const get = () => +(el.dataset.val || 0);
+  const set = v => { v = Math.max(min, Math.min(max, Math.round(v))); el.dataset.val = v; inp.value = kind === 'time' ? E.fmtTime(v) : String(v); updateTotal(); };
+  dec.onclick = () => set(kind === 'time' ? get() - STEP(get() - 1) : get() - 1);
+  inc.onclick = () => set(kind === 'time' ? get() + STEP(get()) : get() + 1);
+  inp.onchange = () => { const v = kind === 'time' ? E.parseTime(inp.value) : parseInt(inp.value, 10); if (Number.isFinite(v)) set(v); else set(get()); };
+  inp.onfocus = () => inp.select();
+  el._set = set;
+}
+document.querySelectorAll('.stepper').forEach(stepper);
+const steppers = () => [...document.querySelectorAll('.stepper')];
+function formTimer() {
+  const t = { id: editing && !editIsCopy ? editing.id : '', name: $('#fName').value.trim() || 'My timer', names: $('#fNames').value.split('\n') };
+  for (const el of steppers()) t[el.dataset.key] = +(el.dataset.val || 0);
+  return E.normalize(t);
+}
+function updateTotal() {
+  const t = formTimer();
+  $('#fTotal').textContent = E.fmtTime(E.totalDuration(E.compile(t)) - E.LEAD_IN);
+  $('#fSummary').textContent = '· ' + E.summary(t);
+  $('#setRestField').hidden = t.sets < 2;
+}
+function openEditor(t, asCopy) {
+  editing = t; editIsCopy = !!asCopy;
+  const base = E.normalize(t || { name: '', work: 30, rest: 15, rounds: 8, sets: 1 });
+  $('#editTitle').textContent = !t ? 'New timer' : asCopy ? 'Customise' : 'Edit timer';
+  $('#fName').value = t ? (asCopy ? base.name + ' (mine)' : base.name) : '';
+  $('#fNames').value = base.names.join('\n');
+  for (const el of steppers()) el._set(base[el.dataset.key]);
+  $('#btnDelete').hidden = !t || asCopy;
+  updateTotal(); show('edit');
+}
+$('#fNames').oninput = updateTotal;
+$('#btnNew').onclick = () => openEditor(null, false);
+$('#btnEditBack').onclick = () => { renderHome(); show('home'); };
+function saveForm() {
+  const t = formTimer();
+  if (!t.id) { t.id = 'u-' + Date.now().toString(36); mine.unshift(t); } else { const i = mine.findIndex(x => x.id === t.id); if (i >= 0) mine[i] = t; else mine.unshift(t); }
+  saveMine(); editing = t; editIsCopy = false; $('#btnDelete').hidden = false; $('#editTitle').textContent = 'Edit timer';
+  return t;
+}
+$('#btnSave').onclick = () => { saveForm(); toast('Saved.'); renderHome(); show('home'); };
+$('#btnEditStart').onclick = () => startRun(formTimer());
+$('#btnDelete').onclick = function () {
+  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to delete'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Delete'; }, 3000); return; }
+  mine = mine.filter(x => x.id !== editing.id); saveMine(); delete this.dataset.arm; this.textContent = 'Delete'; renderHome(); show('home'); toast('Deleted.');
+};
+
+/* ---------- settings ---------- */
+const bindSwitch = (id, key) => { const el = $(id); el.checked = !!settings[key]; el.onchange = () => { settings[key] = el.checked; store.set('settings', settings); }; };
+bindSwitch('#sVoice', 'voice'); bindSwitch('#sVibrate', 'vibrate'); bindSwitch('#sHalf', 'half');
+$('#btnSettings').onclick = () => show('settings');
+$('#btnSetBack').onclick = () => show('home');
+$('#btnTest').onclick = () => { const a = audio(); if (!a) return; const t0 = a.currentTime + 0.1; ['count', 'count', 'count', 'go'].forEach((k, i) => beepAt(k, t0 + i)); setTimeout(() => { const t1 = a.currentTime + 0.1; ['count', 'count', 'count', 'stop'].forEach((k, i) => beepAt(k, t1 + i)); }, 5200); toast('Into work: 3-2-1-go. Then out of work: 3-2-1-stop.', 9000); };
+
+/* ---------- sound: loud square-wave beeps through a limiter ---------- */
+let AC = null, bus = null, scheduled = [];
+function audio() {
+  try {
+    if (!AC) {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      const comp = AC.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 0; comp.ratio.value = 20; comp.attack.value = 0.001; comp.release.value = 0.05;
+      const g = AC.createGain(); g.gain.value = 1.75; comp.connect(g); g.connect(AC.destination); bus = comp;
+    }
+    if (AC.state === 'suspended') AC.resume();
+    return AC;
+  } catch (e) { return null; }
+}
+const TONES = { count: [[1600, 0.14]], go: [[2400, 0.7]], stop: [[1100, 0.7]], half: [[1600, 0.1]], done: [[1600, 0.22, 0], [2000, 0.22, 0.28], [2400, 0.6, 0.56]] };
+function beepAt(type, when) {
+  const a = AC; if (!a || !bus) return;
+  for (const [f, d, off = 0] of TONES[type]) {
+    const o = a.createOscillator(), g = a.createGain(), t = when + off;
+    o.type = 'square'; o.frequency.value = f; o.connect(g); g.connect(bus);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.008); g.gain.setValueAtTime(0.9, t + d - 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.start(t); o.stop(t + d + 0.03); scheduled.push(o);
+  }
+}
+function cancelBeeps() { for (const o of scheduled) { try { o.stop(); o.disconnect(); } catch (e) {} } scheduled = []; }
+
+/* ---------- run ---------- */
+const R = { t: null, segs: [], beeps: [], t0: 0, paused: false, pauseAt: 0, idx: -1, done: false, raf: 0, iv: 0 };
+const now = () => performance.now() / 1000;
+const curT = () => R.paused ? R.pauseAt : now() - R.t0;
+function schedule() {   // all remaining beeps go to the audio clock, so they stay on time even if the screen is busy
+  cancelBeeps(); const a = audio(); if (!a) return;
+  const t = curT(), off = a.currentTime - t;
+  for (const b of R.beeps) if (b.t > t - 0.06) beepAt(b.type, Math.max(a.currentTime + 0.01, off + b.t));   // includes the beep at 0
+}
+function halfBeeps(segs) {
+  if (!settings.half) return [];
+  return segs.filter(g => g.kind === 'work' && g.dur >= 120).map(g => ({ t: g.start + g.dur / 2, type: 'half' }));
+}
+let wakeLock = null;
+async function keepAwake() { try { if (navigator.wakeLock && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch (e) {} }
+function letSleep() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && document.body.dataset.screen === 'run' && !R.done) { keepAwake(); render(); } });
+
+function speak(text) {
+  if (!settings.voice || !('speechSynthesis' in window)) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; speechSynthesis.speak(u); } catch (e) {}
+}
+function vibrate(p) { if (settings.vibrate && navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} }
+
+function startRun(t) {
+  R.t = E.normalize(t); R.segs = E.compile(R.t); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
+  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false;
+  $('#rName').textContent = R.t.name; $('#finish').hidden = true; setPaused(false); disarmEnd();
+  document.body.dataset.phase = 'ready'; show('run');
+  audio(); schedule(); keepAwake(); speak('Get ready');
+  cancelAnimationFrame(R.raf); clearInterval(R.iv);
+  const loop = () => { render(); if (!R.done) R.raf = requestAnimationFrame(loop); };
+  R.raf = requestAnimationFrame(loop); R.iv = setInterval(render, 250);   // the interval keeps going when frames stop
+}
+function phaseWords(g) {
+  const lab = E.KIND_LABEL[g.kind];
+  if (g.kind !== 'work') return lab;
+  return (g.label ? g.label + '. ' : 'Work. ') + (g.rounds > 1 ? `Round ${g.round} of ${g.rounds}` : '');
+}
+function render() {
+  if (document.body.dataset.screen !== 'run' || R.done) return;
+  const t = curT(), total = E.totalDuration(R.segs), L = E.locate(R.segs, t), g = L.seg;
+  if (t >= total) return finish();
+  if (L.i !== R.idx) {
+    const first = R.idx < 0; R.idx = L.i;
+    document.body.dataset.phase = g.kind;
+    $('#rPhase').textContent = E.KIND_LABEL[g.kind];
+    $('#rLabel').textContent = g.kind === 'work' ? g.label : '';
+    $('#rRound').textContent = (g.kind === 'work' || g.kind === 'rest' || g.kind === 'setrest') ? `Round ${g.round} / ${g.rounds}${g.sets > 1 ? ` · Set ${g.set} / ${g.sets}` : ''}` : '';
+    const nx = R.segs[L.i + 1];
+    $('#rNext').textContent = nx ? `Next: ${nx.kind === 'work' && nx.label ? nx.label : E.KIND_LABEL[nx.kind]} ${E.fmtTime(nx.dur)}` : 'Last one';
+    $('#rStatus').textContent = phaseWords(g);
+    if (!first && !R.paused) { speak(phaseWords(g)); vibrate(g.kind === 'work' ? [350] : [150, 90, 150]); }
+  }
+  const left = Math.ceil(L.left - 1e-6);
+  $('#rTime').textContent = E.fmtTime(left);
+  // the ring empties clockwise from 12 o'clock; the dot leads it like a clock hand (the dial is drawn rotated so 0 is at the top)
+  $('#rArc').style.strokeDasharray = (1000 * (1 - L.frac)).toFixed(1) + ' 1000';
+  $('#rArc').style.strokeDashoffset = (-1000 * L.frac).toFixed(1);
+  const a = 2 * Math.PI * L.frac;
+  $('#rDot').setAttribute('cx', (100 + 88 * Math.cos(a)).toFixed(2));
+  $('#rDot').setAttribute('cy', (100 + 88 * Math.sin(a)).toFixed(2));
+  $('#rTotal').textContent = E.fmtTime(total - t);
+  $('#rBar').style.width = (100 * Math.min(1, t / total)).toFixed(2) + '%';
+}
+function finish() {
+  R.done = true; cancelAnimationFrame(R.raf); clearInterval(R.iv); letSleep();
+  document.body.dataset.phase = 'done';
+  const work = R.segs.filter(g => g.kind === 'work');
+  $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
+  $('#finish').hidden = false; speak('Finished. Well done.'); vibrate([200, 100, 200, 100, 400]);
+}
+function setPaused(p) {
+  $('#icPause').hidden = p; $('#icPlay').hidden = !p; $('#btnPause').setAttribute('aria-label', p ? 'Resume' : 'Pause');
+}
+function seek(t) {   // jump to time t (seconds from Start)
+  t = Math.max(0, Math.min(t, E.totalDuration(R.segs) - 0.05));
+  if (R.paused) R.pauseAt = t; else R.t0 = now() - t;
+  R.idx = -2; if (!R.paused) schedule(); render();
+}
+$('#btnPause').onclick = () => {
+  if (R.done) return;
+  if (!R.paused) { R.pauseAt = curT(); R.paused = true; cancelBeeps(); try { speechSynthesis.cancel(); } catch (e) {} letSleep(); }
+  else { R.t0 = now() - R.pauseAt; R.paused = false; schedule(); keepAwake(); }
+  setPaused(R.paused); render();
+};
+$('#btnNext').onclick = () => { const L = E.locate(R.segs, curT()); const nx = R.segs[L.i + 1]; if (nx) seek(nx.start); else finish(); };
+$('#btnPrev').onclick = () => { const t = curT(), L = E.locate(R.segs, t); seek(t - L.seg.start > 2 || L.i === 0 ? L.seg.start : R.segs[L.i - 1].start); };
+function disarmEnd() { const b = $('#btnEnd'); b.classList.remove('armed'); b.textContent = 'End'; delete b.dataset.arm; }
+$('#btnEnd').onclick = function () {
+  if (!this.dataset.arm && !R.done) { this.dataset.arm = 1; this.classList.add('armed'); this.textContent = 'Tap to end'; setTimeout(disarmEnd, 3000); return; }
+  stopRun();
+};
+function stopRun() { R.done = true; cancelAnimationFrame(R.raf); clearInterval(R.iv); cancelBeeps(); letSleep(); try { speechSynthesis.cancel(); } catch (e) {} delete document.body.dataset.phase; renderHome(); show('home'); }
+$('#btnAgain').onclick = () => startRun(R.t);
+$('#btnHome').onclick = stopRun;
+document.addEventListener('keydown', e => { if (document.body.dataset.screen === 'run' && e.code === 'Space') { e.preventDefault(); $('#btnPause').click(); } });
+
+/* ---------- start ---------- */
+$('#ver').textContent = VERSION;
+renderHome();
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

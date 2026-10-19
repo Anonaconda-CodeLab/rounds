@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16181D">
+<meta name="description" content="Rounds: a loud, clear interval timer with presets and your own timers. Free, no account, no tracking, works offline.">
+<title>Rounds</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-screen="home">
+
+<!-- HOME -->
+<section id="home" class="screen">
+  <header class="top">
+    <h1 class="wm" aria-label="Rounds">R<span class="o" aria-hidden="true"></span>UNDS<span class="bang">!</span></h1>
+    <button id="btnSettings" class="icon-btn" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
+    </button>
+  </header>
+  <p class="tag">A loud, clear interval timer. Pick a preset or make your own.</p>
+
+  <button id="btnNew" class="new-btn"><span>+</span>New timer</button>
+
+  <h2 class="sec" id="mineHead" hidden>Your timers</h2>
+  <ul id="mineList" class="cards"></ul>
+  <h2 class="sec">Presets</h2>
+  <ul id="presetList" class="cards"></ul>
+
+  <details class="howto">
+    <summary>How the beeps work</summary>
+    <ul>
+      <li>Three short beeps, one per second, count you <b>into</b> every work round, then a long <b>high</b> beep: go.</li>
+      <li>Three short beeps count you <b>out</b> of every work round, then a long <b>low</b> beep: stop.</li>
+      <li>Turn the phone's <b>media volume</b> up; the beeps are high-pitched so they carry over music and traffic.</li>
+      <li>The screen stays on while a timer runs. Add Rounds to your home screen and it works offline.</li>
+    </ul>
+  </details>
+  <footer class="foot">
+    <p>Free and open source. No account, no ads, no tracking: your timers stay on this device.</p>
+    <p><a href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a> · <a href="https://anonacondacodelab.com" target="_blank" rel="noopener noreferrer">Anonaconda Code Lab</a></p>
+    <p class="fine">© 2026 Anonaconda Code Lab · GNU GPL v3 or later · version <span id="ver"></span></p>
+  </footer>
+</section>
+
+<!-- EDITOR -->
+<section id="edit" class="screen" hidden>
+  <header class="bar"><button id="btnEditBack" class="link-btn">‹ Back</button><h2 id="editTitle">New timer</h2><span></span></header>
+  <div class="form">
+    <label class="field"><span>Name</span><input id="fName" maxlength="40" placeholder="My timer" autocomplete="off"></label>
+    <div class="grid2">
+      <div class="field"><span>Work</span><div class="stepper" data-key="work" data-kind="time"></div></div>
+      <div class="field"><span>Rest</span><div class="stepper" data-key="rest" data-kind="time"></div></div>
+      <div class="field"><span>Rounds</span><div class="stepper" data-key="rounds" data-kind="count" data-min="1" data-max="99"></div></div>
+      <div class="field"><span>Sets</span><div class="stepper" data-key="sets" data-kind="count" data-min="1" data-max="20"></div></div>
+      <div class="field" id="setRestField"><span>Break between sets</span><div class="stepper" data-key="setRest" data-kind="time"></div></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><span>Warm-up</span><div class="stepper" data-key="warm" data-kind="time"></div></div>
+      <div class="field"><span>Cool-down</span><div class="stepper" data-key="cool" data-kind="time"></div></div>
+    </div>
+    <label class="field"><span>Exercise names <small>optional, one per line: shown and spoken in each work round, in order</small></span>
+      <textarea id="fNames" rows="3" placeholder="Squats&#10;Push-ups&#10;Burpees"></textarea></label>
+    <p class="total">Total <b id="fTotal">0:00</b> <span id="fSummary"></span></p>
+    <div class="acts">
+      <button id="btnEditStart" class="btn primary">Start</button>
+      <button id="btnSave" class="btn">Save</button>
+      <button id="btnDelete" class="btn ghost" hidden>Delete</button>
+    </div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section id="settings" class="screen" hidden>
+  <header class="bar"><button id="btnSetBack" class="link-btn">‹ Back</button><h2>Settings</h2><span></span></header>
+  <div class="form">
+    <label class="switch"><input type="checkbox" id="sVoice"><span class="track"><span class="knob"></span></span><span>Spoken cues<small>“Work”, “Rest”, “Round 3 of 8” and exercise names</small></span></label>
+    <label class="switch"><input type="checkbox" id="sVibrate"><span class="track"><span class="knob"></span></span><span>Vibrate at each change<small>when the phone supports it</small></span></label>
+    <label class="switch"><input type="checkbox" id="sHalf"><span class="track"><span class="knob"></span></span><span>Halfway beep<small>one short beep halfway through long work rounds (2 min or more)</small></span></label>
+    <button id="btnTest" class="btn">Test the beeps</button>
+  </div>
+</section>
+
+<!-- RUN -->
+<section id="run" class="screen" hidden>
+  <header class="run-top">
+    <button id="btnEnd" class="pill">End</button>
+    <span id="rName" class="run-name"></span>
+    <span id="rTotal" class="run-total"></span>
+  </header>
+  <div class="phase"><b id="rPhase">Get ready</b><span id="rLabel"></span></div>
+  <div class="dial">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="ring-bg" cx="100" cy="100" r="88"/>
+      <circle id="rArc" class="ring" cx="100" cy="100" r="88" pathLength="1000"/>
+      <circle id="rDot" class="ring-dot" cx="100" cy="12" r="7"/>
+    </svg>
+    <div class="dial-in"><span id="rTime" class="time" aria-live="off">0:03</span><span id="rRound" class="round"></span></div>
+  </div>
+  <p id="rNext" class="next"></p>
+  <div class="progress"><span id="rBar"></span></div>
+  <div class="controls">
+    <button id="btnPrev" class="ctl" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 5l-10 7 10 7z"/></svg></button>
+    <button id="btnPause" class="ctl big" aria-label="Pause"><svg id="icPause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg id="icPlay" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M7 4.5l13 7.5-13 7.5z"/></svg></button>
+    <button id="btnNext" class="ctl" aria-label="Skip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M5 5l10 7-10 7z"/></svg></button>
+  </div>
+  <p id="rStatus" class="sr" aria-live="polite"></p>
+  <div id="finish" class="finish" hidden>
+    <h2>Done!</h2>
+    <p id="fDone"></p>
+    <div class="acts"><button id="btnAgain" class="btn primary">Again</button><button id="btnHome" class="btn">Home</button></div>
+  </div>
+</section>
+
+<div id="toast" class="toast" hidden></div>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
