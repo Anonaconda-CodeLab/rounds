@@ -19,9 +19,10 @@
 <section id="home" class="screen">
   <header class="top">
     <h1 class="wm" aria-label="Rounds">R<span class="o" aria-hidden="true"></span>UNDS<span class="bang">!</span></h1>
+    <span class="top-btns"><button id="btnHRHome" class="hr-home" hidden aria-label="Connect a heart-rate strap" title="Heart rate"><span aria-hidden="true">♥</span><b id="hrHomeVal">Connect</b></button>
     <button id="btnSettings" class="icon-btn" aria-label="Settings" title="Settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>
-    </button>
+    </button></span>
   </header>
   <p class="tag">A loud, clear interval timer. Pick a preset or make your own; tap ☆ to keep favourites at the top.</p>
 
@@ -33,6 +34,7 @@
   <ul id="mineList" class="cards"></ul>
   <h2 class="sec" id="presetHead">Presets</h2>
   <div id="goalChips" class="chips" role="group" aria-label="What are you training for?"></div>
+  <div class="sortrow"><button id="btnHard" class="sort-btn" aria-pressed="false">↓ Hardest first</button><span id="hardNote" class="sort-note" hidden>Ranked by how hard the efforts are, how short the rests, and how much there is in total.</span></div>
   <ul id="presetList" class="cards"></ul>
 
   <details class="howto">
@@ -41,7 +43,7 @@
       <li>Three short beeps, one per second, count you <b>into</b> every work round, then a long <b>high</b> beep: go.</li>
       <li>Three short beeps count you <b>out</b> of every work round, then a long <b>low</b> beep: stop.</li>
       <li>Turn the phone's <b>media volume</b> up; the beeps are high-pitched so they carry over music and traffic.</li>
-      <li>Heart rate (optional): tap <b>♥</b> beside the dial to connect a Bluetooth strap or watch that shares heart rate (Polar, Garmin, Wahoo, Coospo and most others). Needs Chrome or Chromium on Android or a computer, or Bluefy on iPhone and iPad. Readings are only shown, never saved or sent.</li>
+      <li>Heart rate (optional): tap <b>♥</b> at the top of this screen, or beside the dial during a timer, to connect a Bluetooth strap or watch that shares heart rate (Polar, Garmin, Wahoo, Coospo and most others). Needs Chrome or Chromium on Android or a computer, or Bluefy on iPhone and iPad. Readings are only shown, never saved or sent.</li>
       <li>The screen stays on while a timer runs. Add Rounds to your home screen and it works offline.</li>
     </ul>
   </details>

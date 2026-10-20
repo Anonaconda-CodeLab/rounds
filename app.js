@@ -1,6 +1,6 @@
 /* Rounds: screens, storage, sound. Everything stays on this device. */
 'use strict';
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -25,10 +25,10 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 
 /* ---------- home ---------- */
 const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5l13 7.5-13 7.5z"/></svg>';
-function card(t, preset) {
+function card(t, preset, rank) {
   const total = E.fmtTime(E.totalDuration(E.compile(t)) - E.LEAD_IN);
   const fav = favs.has(t.id);
-  return `<li class="card"><div class="info"><h3>${esc(t.name)}<button class="star${fav ? ' on' : ''}" data-fav="${esc(t.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favourites">${fav ? '★' : '☆'}</button></h3>
+  return `<li class="card"><div class="info"><h3>${rank ? `<span class="rank" title="Difficulty rank, 1 = hardest">#${rank}</span>` : ''}${esc(t.name)}<button class="star${fav ? ' on' : ''}" data-fav="${esc(t.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favourites">${fav ? '★' : '☆'}</button></h3>
     <div class="meta"><b>${esc(E.summary(t))}</b> · ${total}</div>${preset && t.blurb ? `<div class="blurb">${esc(t.blurb)}</div>` : ''}
     <div class="links">${preset && t.info ? `<button class="link" data-about="${esc(t.id)}">About</button>` : ''}<button class="link" data-edit="${esc(t.id)}">${preset ? 'Customise' : 'Edit'}</button></div></div>
     <button class="play" data-start="${esc(t.id)}" aria-label="Start ${esc(t.name)}">${PLAY}</button></li>`;
@@ -45,9 +45,13 @@ function renderHome() {
   const pr = E.PRESETS.filter(t => !favs.has(t.id) && (!goal || (t.goals || []).includes(goal)));
   $('#goalChips').innerHTML = [['', 'All']].concat(E.GOALS).map(([k, l]) => `<button data-goal="${k}" aria-pressed="${goal === k}">${esc(l)}</button>`).join('');
   $('#presetHead').hidden = !E.PRESETS.some(t => !favs.has(t.id));
-  $('#presetList').innerHTML = pr.map(t => card(t, true)).join('');
+  const rk = id => E.HARDEST.indexOf(id) + 1 || 99;
+  if (hard) pr.sort((a, b) => rk(a.id) - rk(b.id));
+  $('#btnHard').setAttribute('aria-pressed', hard); $('#hardNote').hidden = !hard;
+  $('#presetList').innerHTML = pr.map(t => card(t, true, hard ? rk(t.id) : 0)).join('');
 }
-let goal = store.get('goal', '');
+let goal = store.get('goal', ''), hard = !!store.get('hard', false);
+$('#btnHard').onclick = () => { hard = !hard; store.set('hard', hard); renderHome(); };
 const findTimer = id => mine.find(t => t.id === id) || E.PRESETS.find(t => t.id === id);
 document.addEventListener('click', e => {
   const s = e.target.closest('[data-start]'), ed = e.target.closest('[data-edit]'), fv = e.target.closest('[data-fav]'), ab = e.target.closest('[data-about]'), gl = e.target.closest('[data-goal]');
@@ -293,6 +297,10 @@ function drawHR() {
   const b = $('#btnHR'); if (!window.HR || !HR.supported) return;
   b.hidden = false;
   const st = HR.state === 'on' && !HR.fresh() ? 'lost' : HR.state;
+  const h = $('#btnHRHome'); h.hidden = false; h.dataset.st = st;
+  $('#hrHomeVal').textContent = st === 'off' ? 'Connect' : st === 'connecting' ? '…' : HR.bpm && st === 'on' ? HR.bpm : '–';
+  if (HR.bpm) h.style.setProperty('--beat', (60 / HR.bpm).toFixed(2) + 's');
+  h.setAttribute('aria-label', st === 'off' ? 'Connect a heart-rate strap' : `Heart rate ${HR.bpm || 'not available'}. Tap twice to disconnect`);
   b.dataset.st = st;
   $('#hrVal').textContent = st === 'off' ? '+' : HR.bpm && st !== 'connecting' ? HR.bpm : '–';
   $('#hrSub').textContent = st === 'off' ? 'HR' : st === 'connecting' ? '…' : 'BPM';
@@ -307,9 +315,9 @@ if (window.HR) {
       R.hr.push({ t, bpm: HR.bpm, work: L.seg && L.seg.kind === 'work' });
     }
   };
-  setInterval(() => { if (document.body.dataset.screen === 'run') drawHR(); }, 2000);   // greys out if readings stop
+  setInterval(() => { if (HR.state !== 'off') drawHR(); }, 2000);   // greys out if readings stop
 }
-$('#btnHR').onclick = async () => {
+$('#btnHR').onclick = $('#btnHRHome').onclick = async () => {
   if (HR.state !== 'off') { if (confirmHR()) HR.disconnect(); return; }
   try { await HR.connect(); toast('Heart rate connected'); }
   catch (e) { drawHR(); if (e && e.name !== 'NotFoundError') toast('Could not connect. Check the strap is on and not connected to another app.', 5000); }

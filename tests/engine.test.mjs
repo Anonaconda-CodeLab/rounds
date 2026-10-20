@@ -88,3 +88,9 @@ test('Gibala One-Minute Workout lasts 10 minutes with 1 minute of sprinting', ()
 test('every preset has an explanation and at least one goal', () => {
   for (const p of E.PRESETS) { assert.ok(p.info && p.info.what && p.info.why && p.info.src, p.name); assert.ok(p.goals && p.goals.length, p.name); }
 });
+
+test('hardest-first ranking covers every preset exactly once', () => {
+  const ids = E.PRESETS.map(t => t.id).sort();
+  assert.deepEqual([...E.HARDEST].sort(), ids);
+  assert.equal(E.HARDEST[0], 'p-tabata');
+});

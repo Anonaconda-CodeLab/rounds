@@ -171,3 +171,15 @@ body[data-phase="done"]{--ph:var(--done);--ph-ink:#fff}
 .hr[data-st="lost"],.hr[data-st="connecting"]{opacity:.65;border-style:dashed}
 @keyframes beat{0%{transform:scale(1.3)}35%{transform:scale(1)}}
 .f-hr{font-size:17px!important;font-variant-numeric:tabular-nums}
+.top-btns{display:flex;gap:8px;align-items:center}
+.hr-home{height:44px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:flex;align-items:center;gap:6px;padding:0 14px;font-weight:600;font-size:15px}
+.hr-home span{color:var(--accent);font-size:17px}
+.hr-home b{font-weight:600}
+.hr-home[data-st="on"] b{font-family:var(--f-mono);font-weight:500;font-size:17px;font-variant-numeric:tabular-nums}
+.hr-home[data-st="on"] span{animation:beat var(--beat,1s) ease-out infinite;display:inline-block}
+.hr-home[data-st="lost"],.hr-home[data-st="connecting"]{opacity:.7;border-style:dashed}
+.sortrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:-2px 0 12px}
+.sort-btn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 13px;font-size:14px;font-weight:600;color:var(--ink)}
+.sort-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.sort-note{font-size:13px;color:var(--muted);flex:1 1 220px}
+.rank{flex:none;font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:1px 7px;margin-right:2px}

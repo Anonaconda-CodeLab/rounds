@@ -217,5 +217,9 @@ const PRESETS = [
       why: 'A short daily core routine.', src: 'Common format.' } }
 ];
 
-const Engine = { KIND_LABEL, LEAD_IN, GOALS, normalize, compile, roundSteps, fartlekSteps, totalDuration, beepPlan, locate, fmtTime, parseTime, summary, PRESETS };
+// presets ranked hardest to easiest by overall demand: how hard the efforts are, how little rest they get, and how much
+// there is in total. All-out sprint work ranks above steady hard work; self-paced sessions sit lower.
+const HARDEST = ['p-tabata', 'p-gibalasit', 'p-4x4', 'p-hiit4020', 'p-boxing', 'p-little', 'p-gibala10', 'p-102030', 'p-3030',
+  'p-tempo', 'p-amrap15', 'p-pyramid', 'p-oneminute', 'p-emom10', 'p-fartlek', 'p-plank'];
+const Engine = { HARDEST, KIND_LABEL, LEAD_IN, GOALS, normalize, compile, roundSteps, fartlekSteps, totalDuration, beepPlan, locate, fmtTime, parseTime, summary, PRESETS };
 if (typeof module !== 'undefined' && module.exports) module.exports = Engine; else globalThis.Engine = Engine;
