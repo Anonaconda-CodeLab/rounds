@@ -51,6 +51,7 @@ a{color:inherit}
 .howto li{margin:6px 0}
 .foot{margin-top:28px;color:var(--muted);font-size:14px}
 .foot p{margin:6px 0}
+.foot .thanks{color:var(--ink);font-size:15px;line-height:1.5;margin-bottom:14px}
 .foot .fine{font-size:12.5px}
 
 /* editor and settings */

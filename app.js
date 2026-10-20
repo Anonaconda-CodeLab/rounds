@@ -1,6 +1,6 @@
 /* Rounds: screens, storage, sound. Everything stays on this device. */
 'use strict';
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
