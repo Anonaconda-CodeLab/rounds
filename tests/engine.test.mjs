@@ -50,3 +50,41 @@ test('bad input is clamped, presets are valid', () => {
   assert.equal(n.work, 1); assert.equal(n.rounds, 99); assert.equal(n.rest, 0);
   for (const p of E.PRESETS) assert.ok(E.totalDuration(E.compile(p)) > 60, p.name);
 });
+
+test('custom steps: 10-20-30 blocks, set break, nothing dropped after the last sprint', () => {
+  const p = E.PRESETS.find(x => x.id === 'p-102030'), s = E.compile(p);
+  assert.equal(s.filter(g => g.kind === 'work').length, 30);
+  assert.equal(s.filter(g => g.kind === 'setrest').length, 2);
+  assert.equal(E.totalDuration(s) - E.LEAD_IN, 300 + 3 * 300 + 2 * 120);
+  const b = E.beepPlan(s), steady = s.find(g => g.label === 'Steady'), sprint = s.find(g => g.label === 'Sprint!');
+  assert.ok(b.some(x => x.type === 'go' && x.t === steady.start), 'go into steady');
+  assert.ok(b.some(x => x.type === 'go' && x.t === sprint.start), 'go into sprint');
+  assert.ok(b.some(x => x.type === 'stop' && x.t === sprint.start + 10), 'stop after sprint');
+});
+
+test('pyramid: one round of 5 efforts, trailing rest dropped; efforts numbered', () => {
+  const s = E.compile(E.PRESETS.find(x => x.id === 'p-pyramid'));
+  const w = s.filter(g => g.kind === 'work');
+  assert.deepEqual(w.map(g => g.dur), [60, 120, 180, 120, 60]);
+  assert.equal(w[2].n, 3); assert.equal(w[2].nw, 5);
+  assert.equal(s[s.length - 1].kind, 'cool');
+});
+
+test('fartlek: random but repeatable for a seed, fills the time, surges within limits', () => {
+  const f = { fartlek: { total: 1200, surgeMin: 15, surgeMax: 60 } };
+  const a = E.compile(f, 7), b = E.compile(f, 7), c = E.compile(f, 8);
+  assert.deepEqual(a.map(g => g.dur), b.map(g => g.dur));
+  assert.notDeepEqual(a.map(g => g.dur), c.map(g => g.dur));
+  assert.equal(E.totalDuration(a) - E.LEAD_IN, 1200);
+  for (const g of a.filter(g => g.kind === 'work').slice(0, -1)) assert.ok(g.dur >= 15 && g.dur <= 60, String(g.dur));
+});
+
+test('Gibala One-Minute Workout lasts 10 minutes with 1 minute of sprinting', () => {
+  const s = E.compile(E.PRESETS.find(x => x.id === 'p-oneminute'));
+  assert.equal(E.totalDuration(s) - E.LEAD_IN, 600);
+  assert.equal(s.filter(g => g.kind === 'work').reduce((a, g) => a + g.dur, 0), 60);
+});
+
+test('every preset has an explanation and at least one goal', () => {
+  for (const p of E.PRESETS) { assert.ok(p.info && p.info.what && p.info.why && p.info.src, p.name); assert.ok(p.goals && p.goals.length, p.name); }
+});

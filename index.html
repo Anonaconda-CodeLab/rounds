@@ -32,6 +32,7 @@
   <h2 class="sec" id="mineHead" hidden>Your timers</h2>
   <ul id="mineList" class="cards"></ul>
   <h2 class="sec" id="presetHead">Presets</h2>
+  <div id="goalChips" class="chips" role="group" aria-label="What are you training for?"></div>
   <ul id="presetList" class="cards"></ul>
 
   <details class="howto">
@@ -55,9 +56,26 @@
   <header class="bar"><button id="btnEditBack" class="link-btn">‹ Back</button><h2 id="editTitle">New timer</h2><span></span></header>
   <div class="form">
     <label class="field"><span>Name</span><input id="fName" maxlength="40" placeholder="My timer" autocomplete="off"></label>
-    <div class="grid2">
-      <div class="field"><span>Work</span><div class="stepper" data-key="work" data-kind="time"></div></div>
-      <div class="field"><span>Rest</span><div class="stepper" data-key="rest" data-kind="time"></div></div>
+    <div id="modeSimple">
+      <div class="grid2">
+        <div class="field"><span>Work</span><div class="stepper" data-key="work" data-kind="time"></div></div>
+        <div class="field"><span>Rest</span><div class="stepper" data-key="rest" data-kind="time"></div></div>
+      </div>
+      <button type="button" id="btnToSteps" class="link-btn small">Use custom steps (for patterns like 10-20-30 or a pyramid) ›</button>
+    </div>
+    <div id="modeSteps" class="field" hidden>
+      <span>Steps in each round <small>work steps get the 3-2-1 beeps; rest steps are easy or recovery</small></span>
+      <ol id="stepList" class="steps"></ol>
+      <div class="acts"><button type="button" id="btnAddStep" class="btn">+ Add step</button><button type="button" id="btnToSimple" class="link-btn small">Back to simple work / rest</button></div>
+    </div>
+    <div id="modeFartlek" hidden>
+      <div class="grid2">
+        <div class="field"><span>Fartlek time</span><div class="stepper" data-key="fTotal" data-kind="time" data-min="120" data-max="7200"></div></div>
+        <div class="field"><span>Shortest surge</span><div class="stepper" data-key="fMin" data-kind="time" data-min="5" data-max="600"></div></div>
+        <div class="field"><span>Longest surge</span><div class="stepper" data-key="fMax" data-kind="time" data-min="5" data-max="600"></div></div>
+      </div>
+    </div>
+    <div class="grid2" id="repeatGrid">
       <div class="field"><span>Rounds</span><div class="stepper" data-key="rounds" data-kind="count" data-min="1" data-max="99"></div></div>
       <div class="field"><span>Sets</span><div class="stepper" data-key="sets" data-kind="count" data-min="1" data-max="20"></div></div>
       <div class="field" id="setRestField"><span>Break between sets</span><div class="stepper" data-key="setRest" data-kind="time"></div></div>
@@ -119,6 +137,19 @@
   </div>
 </section>
 
+<div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="shTitle">
+  <div class="sheet-in">
+    <button id="btnShClose" class="sheet-x" aria-label="Close">×</button>
+    <h2 id="shTitle"></h2>
+    <p id="shSum" class="sh-sum"></p>
+    <h3>What it is</h3><p id="shWhat"></p>
+    <h3>How to do it</h3><p id="shHow"></p>
+    <h3>Why</h3><p id="shWhy"></p>
+    <p id="shNote" class="sh-note"></p>
+    <p id="shSrc" class="sh-src"></p>
+    <div class="acts"><button id="btnShStart" class="btn primary">Start</button><button id="btnShEdit" class="btn">Customise</button></div>
+  </div>
+</div>
 <div id="toast" class="toast" hidden></div>
 <script src="engine.js"></script>
 <script src="app.js"></script>

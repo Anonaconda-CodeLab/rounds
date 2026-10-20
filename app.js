@@ -30,7 +30,7 @@ function card(t, preset) {
   const fav = favs.has(t.id);
   return `<li class="card"><div class="info"><h3>${esc(t.name)}<button class="star${fav ? ' on' : ''}" data-fav="${esc(t.id)}" aria-pressed="${fav}" aria-label="${fav ? 'Remove from' : 'Add to'} favourites">${fav ? '★' : '☆'}</button></h3>
     <div class="meta"><b>${esc(E.summary(t))}</b> · ${total}</div>${preset && t.blurb ? `<div class="blurb">${esc(t.blurb)}</div>` : ''}
-    <button class="link" data-edit="${esc(t.id)}">${preset ? 'Customise' : 'Edit'}</button></div>
+    <div class="links">${preset && t.info ? `<button class="link" data-about="${esc(t.id)}">About</button>` : ''}<button class="link" data-edit="${esc(t.id)}">${preset ? 'Customise' : 'Edit'}</button></div></div>
     <button class="play" data-start="${esc(t.id)}" aria-label="Start ${esc(t.name)}">${PLAY}</button></li>`;
 }
 function renderHome() {
@@ -42,24 +42,46 @@ function renderHome() {
   const myRest = mine.filter(t => !favs.has(t.id));
   $('#mineHead').hidden = !myRest.length;
   $('#mineList').innerHTML = myRest.map(t => card(t, false)).join('');
-  const pr = E.PRESETS.filter(t => !favs.has(t.id));
-  $('#presetHead').hidden = !pr.length;
+  const pr = E.PRESETS.filter(t => !favs.has(t.id) && (!goal || (t.goals || []).includes(goal)));
+  $('#goalChips').innerHTML = [['', 'All']].concat(E.GOALS).map(([k, l]) => `<button data-goal="${k}" aria-pressed="${goal === k}">${esc(l)}</button>`).join('');
+  $('#presetHead').hidden = !E.PRESETS.some(t => !favs.has(t.id));
   $('#presetList').innerHTML = pr.map(t => card(t, true)).join('');
 }
+let goal = store.get('goal', '');
 const findTimer = id => mine.find(t => t.id === id) || E.PRESETS.find(t => t.id === id);
 document.addEventListener('click', e => {
-  const s = e.target.closest('[data-start]'), ed = e.target.closest('[data-edit]'), fv = e.target.closest('[data-fav]');
-  if (fv) { const id = fv.dataset.fav; if (favs.has(id)) favs.delete(id); else favs.add(id); saveFavs(); renderHome(); toast(favs.has(id) ? 'Added to favourites.' : 'Removed from favourites.', 1800); }
+  const s = e.target.closest('[data-start]'), ed = e.target.closest('[data-edit]'), fv = e.target.closest('[data-fav]'), ab = e.target.closest('[data-about]'), gl = e.target.closest('[data-goal]');
+  if (gl) { goal = gl.dataset.goal; store.set('goal', goal); renderHome(); }
+  else if (ab) openAbout(findTimer(ab.dataset.about));
+  else if (fv) { const id = fv.dataset.fav; if (favs.has(id)) favs.delete(id); else favs.add(id); saveFavs(); renderHome(); toast(favs.has(id) ? 'Added to favourites.' : 'Removed from favourites.', 1800); }
   else if (s) { const t = findTimer(s.dataset.start); if (t) startRun(t); }
   else if (ed) { const t = findTimer(ed.dataset.edit); if (t) openEditor(t, !t.id.startsWith('u-')); }
 });
+
+/* ---------- about sheet ---------- */
+let aboutT = null;
+function openAbout(t) {
+  if (!t || !t.info) return; aboutT = t;
+  $('#shTitle').textContent = t.name;
+  $('#shSum').textContent = E.summary(t) + ' · ' + E.fmtTime(E.totalDuration(E.compile(t)) - E.LEAD_IN);
+  $('#shWhat').textContent = t.info.what; $('#shHow').textContent = t.info.how; $('#shWhy').textContent = t.info.why;
+  $('#shNote').textContent = t.info.note || ''; $('#shNote').hidden = !t.info.note;
+  $('#shSrc').textContent = 'Source: ' + t.info.src;
+  $('#sheet').hidden = false; $('#btnShClose').focus();
+}
+const closeAbout = () => { $('#sheet').hidden = true; };
+$('#btnShClose').onclick = closeAbout;
+$('#sheet').onclick = e => { if (e.target.id === 'sheet') closeAbout(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#sheet').hidden) closeAbout(); });
+$('#btnShStart').onclick = () => { closeAbout(); startRun(aboutT); };
+$('#btnShEdit').onclick = () => { closeAbout(); openEditor(aboutT, true); };
 
 /* ---------- editor ---------- */
 let editing = null, editIsCopy = false;
 const STEP = v => v < 60 ? 5 : v < 300 ? 15 : 30;
 function stepper(el) {
   const kind = el.dataset.kind, min = +(el.dataset.min || 0), max = +(el.dataset.max || 3600);
-  el.innerHTML = `<button type="button" aria-label="Less">−</button><input inputmode="${kind === 'time' ? 'text' : 'numeric'}" aria-label="${el.closest('.field').querySelector('span').textContent}"><button type="button" aria-label="More">+</button>`;
+  el.innerHTML = `<button type="button" aria-label="Less">−</button><input inputmode="${kind === 'time' ? 'text' : 'numeric'}" aria-label="${el.dataset.label || (el.closest('.field') ? el.closest('.field').querySelector('span').textContent : 'Time')}"><button type="button" aria-label="More">+</button>`;
   const inp = el.querySelector('input'), [dec, inc] = el.querySelectorAll('button');
   const get = () => +(el.dataset.val || 0);
   const set = v => { v = Math.max(min, Math.min(max, Math.round(v))); el.dataset.val = v; inp.value = kind === 'time' ? E.fmtTime(v) : String(v); updateTotal(); };
@@ -69,14 +91,34 @@ function stepper(el) {
   inp.onfocus = () => inp.select();
   el._set = set;
 }
-document.querySelectorAll('.stepper').forEach(stepper);
-const steppers = () => [...document.querySelectorAll('.stepper')];
+document.querySelectorAll('.stepper[data-key]').forEach(stepper);
+const steppers = () => [...document.querySelectorAll('.stepper[data-key]')];
+let mode = 'simple';   // simple work/rest, custom steps, or fartlek
+function setMode(m) { mode = m; $('#modeSimple').hidden = m !== 'simple'; $('#modeSteps').hidden = m !== 'steps'; $('#modeFartlek').hidden = m !== 'fartlek'; $('#repeatGrid').hidden = m === 'fartlek'; updateTotal(); }
+function stepRow(st) {
+  const li = document.createElement('li');
+  li.innerHTML = `<button type="button" class="kind"></button><div class="stepper" data-kind="time" data-min="1" data-label="Step length"></div><input class="nm" maxlength="30" placeholder="Name (optional)"><button type="button" class="del" aria-label="Remove step">×</button>`;
+  const kb = li.querySelector('.kind'), setKind = k => { li.dataset.k = k; kb.textContent = k === 'work' ? 'Work' : 'Rest'; kb.classList.toggle('rest', k === 'rest'); updateTotal(); };
+  kb.onclick = () => setKind(li.dataset.k === 'work' ? 'rest' : 'work');
+  li.querySelector('.del').onclick = () => { if ($('#stepList').children.length > 1) { li.remove(); updateTotal(); } };
+  const nm = li.querySelector('.nm'); nm.value = st.n || ''; nm.oninput = updateTotal;
+  const sp = li.querySelector('.stepper'); stepper(sp); sp._set(st.d);
+  setKind(st.k); return li;
+}
+function setSteps(steps) { const ol = $('#stepList'); ol.innerHTML = ''; for (const st of steps) ol.appendChild(stepRow(st)); }
+const readSteps = () => [...$('#stepList').children].map(li => ({ k: li.dataset.k, d: +(li.querySelector('.stepper').dataset.val || 0), n: li.querySelector('.nm').value }));
+$('#btnAddStep').onclick = () => { const last = readSteps().pop(); $('#stepList').appendChild(stepRow({ k: last && last.k === 'work' ? 'rest' : 'work', d: last ? last.d : 30 })); updateTotal(); };
+$('#btnToSteps').onclick = () => { const t = formTimer(); setSteps(E.roundSteps(Object.assign({}, t, { steps: null }))); setMode('steps'); };
+$('#btnToSimple').onclick = () => { const w = readSteps().find(x => x.k === 'work'), r = readSteps().find(x => x.k === 'rest'); if (w) steppers().find(el => el.dataset.key === 'work')._set(w.d); steppers().find(el => el.dataset.key === 'rest')._set(r ? r.d : 0); setMode('simple'); };
 function formTimer() {
   const t = { id: editing && !editIsCopy ? editing.id : '', name: $('#fName').value.trim() || 'My timer', names: $('#fNames').value.split('\n') };
   for (const el of steppers()) t[el.dataset.key] = +(el.dataset.val || 0);
+  if (mode === 'steps') t.steps = readSteps();
+  if (mode === 'fartlek') t.fartlek = { total: t.fTotal, surgeMin: t.fMin, surgeMax: t.fMax };
   return E.normalize(t);
 }
 function updateTotal() {
+  if (!$('#fName')) return;
   const t = formTimer();
   $('#fTotal').textContent = E.fmtTime(E.totalDuration(E.compile(t)) - E.LEAD_IN);
   $('#fSummary').textContent = '· ' + E.summary(t);
@@ -88,7 +130,11 @@ function openEditor(t, asCopy) {
   $('#editTitle').textContent = !t ? 'New timer' : asCopy ? 'Customise' : 'Edit timer';
   $('#fName').value = t ? (asCopy ? base.name + ' (mine)' : base.name) : '';
   $('#fNames').value = base.names.join('\n');
+  const f = base.fartlek || { total: 1200, surgeMin: 15, surgeMax: 60 };
+  Object.assign(base, { fTotal: f.total, fMin: f.surgeMin, fMax: f.surgeMax });
   for (const el of steppers()) el._set(base[el.dataset.key]);
+  if (base.steps) setSteps(base.steps);
+  setMode(base.fartlek ? 'fartlek' : base.steps ? 'steps' : 'simple');
   $('#btnDelete').hidden = !t || asCopy;
   updateTotal(); show('edit');
 }
@@ -165,7 +211,7 @@ function speak(text) {
 function vibrate(p) { if (settings.vibrate && navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} }
 
 function startRun(t) {
-  R.t = E.normalize(t); R.segs = E.compile(R.t); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
+  R.t = E.normalize(t); R.segs = E.compile(R.t, Date.now()); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
   R.t0 = now(); R.paused = false; R.idx = -1; R.done = false;
   $('#rName').textContent = R.t.name; $('#finish').hidden = true; setPaused(false); disarmEnd();
   document.body.dataset.phase = 'ready'; show('run');
@@ -176,7 +222,7 @@ function startRun(t) {
 }
 function phaseWords(g) {
   const lab = E.KIND_LABEL[g.kind];
-  if (g.kind !== 'work') return lab;
+  if (g.kind !== 'work') return g.label || lab;
   return (g.label ? g.label + '. ' : 'Work. ') + (g.rounds > 1 ? `Round ${g.round} of ${g.rounds}` : '');
 }
 function render() {
@@ -187,10 +233,12 @@ function render() {
     const first = R.idx < 0; R.idx = L.i;
     document.body.dataset.phase = g.kind;
     $('#rPhase').textContent = E.KIND_LABEL[g.kind];
-    $('#rLabel').textContent = g.kind === 'work' ? g.label : '';
-    $('#rRound').textContent = (g.kind === 'work' || g.kind === 'rest' || g.kind === 'setrest') ? `Round ${g.round} / ${g.rounds}${g.sets > 1 ? ` · Set ${g.set} / ${g.sets}` : ''}` : '';
+    $('#rLabel').textContent = g.label || '';
+    const inRound = g.kind === 'work' || g.kind === 'rest' || g.kind === 'setrest';
+    $('#rRound').textContent = !inRound ? '' : g.rounds > 1 || g.sets > 1 ? `Round ${g.round} / ${g.rounds}${g.sets > 1 ? ` · Set ${g.set} / ${g.sets}` : ''}`
+      : g.kind === 'work' && g.nw > 1 ? `Effort ${g.n} / ${g.nw}` : '';
     const nx = R.segs[L.i + 1];
-    $('#rNext').textContent = nx ? `Next: ${nx.kind === 'work' && nx.label ? nx.label : E.KIND_LABEL[nx.kind]} ${E.fmtTime(nx.dur)}` : 'Last one';
+    $('#rNext').textContent = nx ? `Next: ${nx.label || E.KIND_LABEL[nx.kind]} ${E.fmtTime(nx.dur)}` : 'Last one';
     $('#rStatus').textContent = phaseWords(g);
     if (!first && !R.paused) { speak(phaseWords(g)); vibrate(g.kind === 'work' ? [350] : [150, 90, 150]); }
   }
