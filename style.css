@@ -159,3 +159,15 @@ body[data-phase="done"]{--ph:var(--done);--ph-ink:#fff}
 .steps input.nm{width:100%;min-width:0;font:inherit;font-size:15px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .steps .del{border:none;background:none;font-size:22px;color:var(--muted)}
 @media (max-width:420px){.steps li{grid-template-columns:64px 118px 1fr 30px;gap:6px}}
+/* heart rate */
+.hr{position:absolute;right:-2%;bottom:-2%;width:clamp(64px,19vw,92px);aspect-ratio:1;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;line-height:1}
+.hr .hr-h{font-size:clamp(14px,4vw,18px);opacity:.9}
+.hr b{font-family:var(--f-mono);font-weight:500;font-size:clamp(22px,7vw,34px);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.hr small{font-size:11px;font-weight:700;letter-spacing:.08em;opacity:.8;margin-top:2px}
+.hr[data-st="on"]{background:var(--ph-ink);color:var(--ph);border-color:var(--ph-ink)}
+.hr[data-st="on"] .hr-h{animation:beat var(--beat,1s) ease-out infinite}
+.hr[data-st="off"] b{font-size:clamp(26px,8vw,36px);font-family:var(--f-sans);font-weight:400}
+.hr[data-st="lost"],.hr[data-st="connecting"]{opacity:.65;border-style:dashed}
+@keyframes beat{0%{transform:scale(1.3)}35%{transform:scale(1)}}
+.f-hr{font-size:17px!important;font-variant-numeric:tabular-nums}

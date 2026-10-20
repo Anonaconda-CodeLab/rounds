@@ -6,7 +6,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#16181D">
-<meta name="description" content="Rounds: a loud, clear interval timer with presets and your own timers. Free, no account, no tracking, works offline.">
+<meta name="description" content="Rounds: a loud, clear interval timer with presets and your own timers. Free, no account, no tracking, works offline. Optional live heart rate from a Bluetooth strap.">
 <title>Rounds</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -41,6 +41,7 @@
       <li>Three short beeps, one per second, count you <b>into</b> every work round, then a long <b>high</b> beep: go.</li>
       <li>Three short beeps count you <b>out</b> of every work round, then a long <b>low</b> beep: stop.</li>
       <li>Turn the phone's <b>media volume</b> up; the beeps are high-pitched so they carry over music and traffic.</li>
+      <li>Heart rate (optional): tap <b>♥</b> beside the dial to connect a Bluetooth strap or watch that shares heart rate (Polar, Garmin, Wahoo, Coospo and most others). Needs Chrome or Chromium on Android or a computer, or Bluefy on iPhone and iPad. Readings are only shown, never saved or sent.</li>
       <li>The screen stays on while a timer runs. Add Rounds to your home screen and it works offline.</li>
     </ul>
   </details>
@@ -121,6 +122,7 @@
       <circle id="rDot" class="ring-dot" cx="100" cy="12" r="7"/>
     </svg>
     <div class="dial-in"><span id="rTime" class="time" aria-live="off">0:03</span><span id="rRound" class="round"></span></div>
+    <button id="btnHR" class="hr" hidden aria-label="Connect a heart-rate strap" title="Heart rate"><span class="hr-h" aria-hidden="true">♥</span><b id="hrVal">+</b><small id="hrSub">HR</small></button>
   </div>
   <p id="rNext" class="next"></p>
   <div class="progress"><span id="rBar"></span></div>
@@ -133,6 +135,7 @@
   <div id="finish" class="finish" hidden>
     <h2>Done!</h2>
     <p id="fDone"></p>
+    <p id="fHR" class="f-hr" hidden></p>
     <div class="acts"><button id="btnAgain" class="btn primary">Again</button><button id="btnHome" class="btn">Home</button></div>
   </div>
 </section>
@@ -152,6 +155,7 @@
 </div>
 <div id="toast" class="toast" hidden></div>
 <script src="engine.js"></script>
+<script src="hr.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

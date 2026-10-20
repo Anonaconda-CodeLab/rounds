@@ -1,6 +1,6 @@
 /* Rounds: screens, storage, sound. Everything stays on this device. */
 'use strict';
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -187,7 +187,7 @@ function beepAt(type, when) {
 function cancelBeeps() { for (const o of scheduled) { try { o.stop(); o.disconnect(); } catch (e) {} } scheduled = []; }
 
 /* ---------- run ---------- */
-const R = { t: null, segs: [], beeps: [], t0: 0, paused: false, pauseAt: 0, idx: -1, done: false, raf: 0, iv: 0 };
+const R = { hr: [], t: null, segs: [], beeps: [], t0: 0, paused: false, pauseAt: 0, idx: -1, done: false, raf: 0, iv: 0 };
 const now = () => performance.now() / 1000;
 const curT = () => R.paused ? R.pauseAt : now() - R.t0;
 function schedule() {   // all remaining beeps go to the audio clock, so they stay on time even if the screen is busy
@@ -212,7 +212,7 @@ function vibrate(p) { if (settings.vibrate && navigator.vibrate) try { navigator
 
 function startRun(t) {
   R.t = E.normalize(t); R.segs = E.compile(R.t, Date.now()); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
-  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false;
+  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false; R.hr = []; $('#fHR').hidden = true; drawHR();
   $('#rName').textContent = R.t.name; $('#finish').hidden = true; setPaused(false); disarmEnd();
   document.body.dataset.phase = 'ready'; show('run');
   audio(); schedule(); keepAwake(); speak('Get ready');
@@ -258,6 +258,8 @@ function finish() {
   document.body.dataset.phase = 'done';
   const work = R.segs.filter(g => g.kind === 'work');
   $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
+  const hs = window.HR ? HR.hrStats(R.hr) : null;
+  $('#fHR').hidden = !hs; if (hs) $('#fHR').textContent = `♥ Work rounds: ${hs.avg} bpm average · ${hs.peak} peak`;
   $('#finish').hidden = false; speak('Finished. Well done.'); vibrate([200, 100, 200, 100, 400]);
 }
 function setPaused(p) {
@@ -286,7 +288,36 @@ $('#btnAgain').onclick = () => startRun(R.t);
 $('#btnHome').onclick = stopRun;
 document.addEventListener('keydown', e => { if (document.body.dataset.screen === 'run' && e.code === 'Space') { e.preventDefault(); $('#btnPause').click(); } });
 
+/* ---------- heart rate (optional) ---------- */
+function drawHR() {
+  const b = $('#btnHR'); if (!window.HR || !HR.supported) return;
+  b.hidden = false;
+  const st = HR.state === 'on' && !HR.fresh() ? 'lost' : HR.state;
+  b.dataset.st = st;
+  $('#hrVal').textContent = st === 'off' ? '+' : HR.bpm && st !== 'connecting' ? HR.bpm : '–';
+  $('#hrSub').textContent = st === 'off' ? 'HR' : st === 'connecting' ? '…' : 'BPM';
+  if (HR.bpm) b.style.setProperty('--beat', (60 / HR.bpm).toFixed(2) + 's');
+  b.setAttribute('aria-label', st === 'off' ? 'Connect a heart-rate strap' : `Heart rate ${HR.bpm || 'not available'}. Tap to disconnect`);
+}
+if (window.HR) {
+  HR.onchange = () => {
+    drawHR();
+    if (HR.fresh() && document.body.dataset.screen === 'run' && !R.done && !R.paused) {
+      const t = curT(), L = E.locate(R.segs, t);
+      R.hr.push({ t, bpm: HR.bpm, work: L.seg && L.seg.kind === 'work' });
+    }
+  };
+  setInterval(() => { if (document.body.dataset.screen === 'run') drawHR(); }, 2000);   // greys out if readings stop
+}
+$('#btnHR').onclick = async () => {
+  if (HR.state !== 'off') { if (confirmHR()) HR.disconnect(); return; }
+  try { await HR.connect(); toast('Heart rate connected'); }
+  catch (e) { drawHR(); if (e && e.name !== 'NotFoundError') toast('Could not connect. Check the strap is on and not connected to another app.', 5000); }
+};
+let hrArm = 0;
+function confirmHR() { const n = Date.now(); if (n - hrArm < 3000) { hrArm = 0; return true; } hrArm = n; toast('Tap ♥ again to disconnect'); return false; }
+
 /* ---------- start ---------- */
 $('#ver').textContent = VERSION;
-renderHome();
+renderHome(); drawHR();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -1,6 +1,6 @@
 {
   "name": "rounds",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Rounds: a loud, clear interval timer. Free, no account, no tracking, works offline.",
   "private": true,
   "license": "GPL-3.0-or-later",
