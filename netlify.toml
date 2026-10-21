@@ -2,3 +2,5 @@
 [build]
   command = "node build.mjs"
   publish = "dist"
+  # Skip the deploy (it costs credits) when only files that aren't part of the website changed
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)mobile' ':(exclude)tests' ':(exclude).github' ':(exclude)README.md'"
