@@ -184,3 +184,6 @@ body[data-phase="done"]{--ph:var(--done);--ph-ink:#fff}
 .sort-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .sort-note{font-size:13px;color:var(--muted);flex:1 1 220px}
 .rank{flex:none;font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:1px 7px;margin-right:2px}
+
+/* Android app: hide guidance that only applies to browsers */
+.native .browser-req { display: none; }

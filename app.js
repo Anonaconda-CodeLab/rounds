@@ -1,6 +1,6 @@
 /* Rounds: screens, storage, sound. Everything stays on this device. */
 'use strict';
-const VERSION = '1.2.1';
+const VERSION = '1.2.2';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -204,15 +204,17 @@ function halfBeeps(segs) {
   return segs.filter(g => g.kind === 'work' && g.dur >= 120).map(g => ({ t: g.start + g.dur / 2, type: 'half' }));
 }
 let wakeLock = null;
-async function keepAwake() { try { if (navigator.wakeLock && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch (e) {} }
-function letSleep() { try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
+async function keepAwake() { if (NATIVE) { AppNative.keepScreenOn(true); AppNative.active(true, 'Workout running'); return; } try { if (navigator.wakeLock && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => wakeLock = null); } } catch (e) {} }
+function letSleep() { if (NATIVE) { AppNative.keepScreenOn(false); AppNative.active(false); return; } try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null; }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && document.body.dataset.screen === 'run' && !R.done) { keepAwake(); render(); } });
 
 function speak(text) {
-  if (!settings.voice || !('speechSynthesis' in window)) return;
+  if (!settings.voice) return;
+  if (NATIVE) { AppNative.speak(text); return; }   // Android's WebView has no speechSynthesis; the phone's own voice is used
+  if (!('speechSynthesis' in window)) return;
   try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; speechSynthesis.speak(u); } catch (e) {}
 }
-function vibrate(p) { if (settings.vibrate && navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} }
+function vibrate(p) { if (settings.vibrate && NATIVE) { AppNative.vibrate(p); return; } if (settings.vibrate && navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} }
 
 function startRun(t) {
   R.t = E.normalize(t); R.segs = E.compile(R.t, Date.now()); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
@@ -328,4 +330,12 @@ function confirmHR() { const n = Date.now(); if (n - hrArm < 3000) { hrArm = 0; 
 /* ---------- start ---------- */
 $('#ver').textContent = VERSION;
 renderHome(); drawHR();
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+/* Android Back button: back inside the app; on the home screen or during a timer the app moves to the background */
+window.appBack = () => {
+  const scr = document.body.dataset.screen || 'home';
+  if (scr === 'home' || scr === 'run' && !R.done) return false;
+  const btn = { edit: '#btnEditBack', settings: '#btnSetBack', run: '#btnHome' }[scr];
+  if (btn) $(btn).click(); else show('home');
+  return true;
+};
+if ('serviceWorker' in navigator && !NATIVE && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});

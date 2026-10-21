@@ -1,2 +1,8 @@
 node_modules/
 .DS_Store
+
+# Android app: copied web files are generated; signing keys never go in the repository
+mobile/www/
+mobile/node_modules/
+*.jks
+*.keystore

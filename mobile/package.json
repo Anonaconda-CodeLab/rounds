@@ -1,0 +1,18 @@
+{
+  "name": "rounds-android",
+  "version": "1.2.2",
+  "private": true,
+  "description": "Android build of Rounds (Capacitor wrapper around www)",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/bluetooth-le": "8.3.0",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}
