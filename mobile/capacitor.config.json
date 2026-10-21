@@ -1,7 +1,7 @@
 {
   "appId": "com.anonacondacodelab.rounds",
   "appName": "Rounds",
-  "webDir": "www",
+  "webDir": "../dist",
   "android": {
     "allowMixedContent": false,
     "captureInput": false,

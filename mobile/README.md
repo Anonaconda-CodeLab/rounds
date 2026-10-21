@@ -1,6 +1,6 @@
 # Rounds for Android
 
-The Android app wraps the same web app (`www`) with [Capacitor](https://capacitorjs.com).
+The Android app wraps the same web app (`../dist`, made by `build.mjs`) with [Capacitor](https://capacitorjs.com).
 Native code is small and lives in `android/app/src/main/java/com/anonacondacodelab/rounds/`:
 
 - `AppPlugin.java`: saving files, vibration, spoken cues, keeping the screen on, starting the session service.
@@ -18,7 +18,7 @@ GitHub builds the APK on every change (`.github/workflows/android.yml`) and publ
 pre-release. To build locally you need Node 22, JDK 21 and the Android SDK:
 
 ```
-node mobile/copy-web.mjs
+node build.mjs
 cd mobile && npm ci && npx cap sync android
 cd android && ./gradlew assembleRelease
 ```

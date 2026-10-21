@@ -1,10 +1,10 @@
 name: Android APK
-# Builds the Android app (mobile/) from the same web app files, signs it with the release key kept in the
+# Builds the Android app (mobile/) from the same web app in dist/, signs it with the release key kept in the
 # repository secrets, and publishes it as the "android-test" pre-release for download.
 on:
   push:
     branches: [main]
-    paths: ['*.html', '*.js', '*.css', '*.png', '*.svg', 'manifest.webmanifest', 'fonts/**', 'package.json', 'mobile/**', '.github/workflows/android.yml']
+    paths: ['*.html', '*.js', '*.css', '*.png', '*.svg', 'manifest.webmanifest', 'fonts/**', 'build.mjs', 'package.json', 'mobile/**', '.github/workflows/android.yml']
   workflow_dispatch:
 permissions:
   contents: write
@@ -25,8 +25,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - name: Copy the web app files
-        run: node mobile/copy-web.mjs
+      - name: Build the web app
+        run: node build.mjs
       - name: Copy it into the Android project
         working-directory: mobile
         run: npm ci && npx cap sync android

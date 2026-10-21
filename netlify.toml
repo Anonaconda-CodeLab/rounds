@@ -1,0 +1,4 @@
+# Netlify builds the app into dist/ and publishes only that folder.
+[build]
+  command = "node build.mjs"
+  publish = "dist"

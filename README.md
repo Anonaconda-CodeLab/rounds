@@ -13,7 +13,9 @@ your own: warm-up, work, rest, rounds, sets with a break between them, cool-down
 - Free and open source. No account, no ads, no tracking. Timers are stored on your device; the app makes no network
   requests and works offline once added to the home screen.
 
-Plain HTML, CSS and JavaScript with no build step. `engine.js` holds the timer logic and `hr.js` the heart-rate connection; both are tested with `npm test`.
+Plain HTML, CSS and JavaScript. `engine.js` holds the timer logic and `hr.js` the heart-rate connection; both are tested with `npm test`.
+`node build.mjs` copies the app's own files into `dist/`, which is what the website publishes (`netlify.toml`) and what the
+Android app in `mobile/` is made from.
 
 © 2026 Anonaconda Code Lab. GNU General Public License v3.0 or later (see `LICENSE`). Fonts: Instrument Sans and IBM Plex
 Mono, SIL Open Font License (see `fonts/`).

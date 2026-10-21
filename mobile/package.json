@@ -2,7 +2,7 @@
   "name": "rounds-android",
   "version": "1.2.2",
   "private": true,
-  "description": "Android build of Rounds (Capacitor wrapper around www)",
+  "description": "Android build of Rounds (Capacitor wrapper around ../dist)",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "sync": "cap sync android"
