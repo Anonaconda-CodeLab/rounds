@@ -1,6 +1,6 @@
 /* Rounds: screens, storage, sound. Everything stays on this device. */
 'use strict';
-const VERSION = '1.2.3';
+const VERSION = '1.2.4';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -364,6 +364,7 @@ renderHome(); drawHR();
 /* Android Back button: back inside the app; on the home screen or during a timer the app moves to the background */
 window.appBack = () => {
   const scr = document.body.dataset.screen || 'home';
+  if (!$('#sheet').hidden) { closeAbout(); return true; }   // a preset's About sheet closes first
   if (scr === 'home' || scr === 'run' && !R.done) return false;
   const btn = { edit: '#btnEditBack', settings: '#btnSetBack', run: '#btnHome' }[scr];
   if (btn) $(btn).click(); else show('home');

@@ -1,5 +1,5 @@
 /* Rounds: offline support. Caches the app's own files; it never contacts any other site. */
-const CACHE = 'rounds-1.2.3';
+const CACHE = 'rounds-1.2.4';
 const FILES = ['./', 'index.html', 'style.css', 'engine.js', 'native.js', 'hr.js', 'app.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'maskable-512.png', 'apple-touch-icon.png', 'fonts/InstrumentSans-latin-variable.woff2', 'fonts/IBMPlexMono-latin-500.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
