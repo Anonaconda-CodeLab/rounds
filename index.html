@@ -117,6 +117,12 @@
     <label class="switch"><input type="checkbox" id="sVibrate"><span class="track"><span class="knob"></span></span><span>Vibrate at each change<small>when the phone supports it</small></span></label>
     <label class="switch"><input type="checkbox" id="sHalf"><span class="track"><span class="knob"></span></span><span>Halfway beep<small>one short beep halfway through long work rounds (2 min or more)</small></span></label>
     <button id="btnTest" class="btn">Test the beeps</button>
+    <div class="backup">
+      <h3>Your timers</h3>
+      <p>Save your own timers, favourites and settings in one file, to keep as a backup or to move them to another phone or browser.</p>
+      <div class="row"><button id="btnSaveTimers" class="btn">Save timers to file</button><button id="btnLoadTimers" class="btn">Import timers</button></div>
+      <input type="file" id="timersIn" accept=".json,application/json" hidden>
+    </div>
   </div>
 </section>
 

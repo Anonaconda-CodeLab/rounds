@@ -1,6 +1,6 @@
 /* Rounds: screens, storage, sound. Everything stays on this device. */
 'use strict';
-const VERSION = '1.2.2';
+const VERSION = '1.2.3';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -164,6 +164,37 @@ bindSwitch('#sVoice', 'voice'); bindSwitch('#sVibrate', 'vibrate'); bindSwitch('
 $('#btnSettings').onclick = () => show('settings');
 $('#btnSetBack').onclick = () => show('home');
 $('#btnTest').onclick = () => { const a = audio(); if (!a) return; const t0 = a.currentTime + 0.1; ['count', 'count', 'count', 'go'].forEach((k, i) => beepAt(k, t0 + i)); setTimeout(() => { const t1 = a.currentTime + 0.1; ['count', 'count', 'count', 'stop'].forEach((k, i) => beepAt(k, t1 + i)); }, 5200); toast('Into work: 3-2-1-go. Then out of work: 3-2-1-stop.', 9000); };
+
+/* ---------- backup: your timers, favourites and settings in one file ---------- */
+function saveFile(name, text) {
+  if (NATIVE) { AppNative.saveFile(name, text, 'application/json').then(r => { if (r.saved) toast('Saved.'); }).catch(e => toast('Could not save the file: ' + (e && e.message || e), 5000)); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+$('#btnSaveTimers').onclick = () => {
+  if (!mine.length && !favs.size) { toast('You have no timers of your own yet.'); return; }
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const data = { app: 'Rounds', kind: 'timers', version: VERSION, saved: d.toISOString(), timers: mine, favs: [...favs], settings, goal, hard };
+  saveFile(`Rounds-timers-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.json`, JSON.stringify(data, null, 1));
+};
+$('#btnLoadTimers').onclick = () => $('#timersIn').click();
+$('#timersIn').onchange = async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+  let data; try { data = JSON.parse(await f.text()); } catch (err) { toast('That file couldn’t be read.', 4000); return; }
+  if (!data || data.app !== 'Rounds' || !Array.isArray(data.timers)) { toast('That isn’t a Rounds timers file.', 4000); return; }
+  const incoming = data.timers.slice(0, 500).map(E.normalize).filter(t => t.id && !E.PRESETS.some(p => p.id === t.id));
+  let added = 0, updated = 0;
+  for (const t of incoming) { const i = mine.findIndex(x => x.id === t.id); if (i >= 0) { mine[i] = t; updated++; } else { mine.push(t); added++; } }
+  saveMine();
+  const ids = new Set([...mine.map(t => t.id), ...E.PRESETS.map(t => t.id)]);
+  if (Array.isArray(data.favs)) { for (const id of data.favs) if (ids.has(id)) favs.add(id); saveFavs(); }
+  if (data.settings && typeof data.settings === 'object') {
+    for (const k of ['voice', 'vibrate', 'half']) if (typeof data.settings[k] === 'boolean') settings[k] = data.settings[k];
+    store.set('settings', settings); $('#sVoice').checked = settings.voice; $('#sVibrate').checked = settings.vibrate; $('#sHalf').checked = settings.half;
+  }
+  renderHome();
+  toast(added || updated ? `Imported ${added + updated} timer${added + updated === 1 ? '' : 's'}${updated ? ` (${updated} replaced)` : ''}.` : 'No timers in that file.', 4000);
+};
 
 /* ---------- sound: loud square-wave beeps through a limiter ---------- */
 let AC = null, bus = null, scheduled = [];
