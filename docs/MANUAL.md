@@ -123,16 +123,31 @@ In **Settings → Your timers**:
 Your timers are stored in the browser on this device. Clearing the browser's site data deletes them, so save a backup
 now and then if you have many.
 
+## The Android app
+Rounds is also an Android app: the same app, with the timer, beeps and spoken cues keeping going while the screen is
+off, and **no internet permission** at all. It is not on Google Play; download it from
+**rounds.anonacondacodelab.com/android.html**, which also explains how to install it and how to check that it's the
+official build. When you start your first timer, it asks to show a notification: that notification is what keeps it
+running with the screen off.
+
+The Android app keeps its own timers, separate from the web app. To move them across, use **Settings → Save timers to
+file** in the web app, then **Import timers** in the Android app. Updates install over the old version and keep your
+timers; **Settings → Check for updates** tells you when a new version is out.
+
 ## Questions
 
 **Why can't I hear the beeps?** Check the phone's media volume (not the ringer volume), that the phone isn't on silent
 for media, and that no other app is holding the audio. Use *Test the beeps* in Settings.
 
 **The timer stopped when I locked the phone.** Browsers pause pages in the background. Keep the screen on (Rounds does
-this for you while a timer runs). The Rounds Android app, coming soon, keeps the beeps and voice cues going with the
-screen off.
+this for you while a timer runs). The Rounds Android app keeps the beeps and voice cues going with the screen off. If a phone
+still stops it after a few minutes, set the app's battery use to *Unrestricted* in Android's settings.
 
 **Does Rounds work offline?** Yes, once you've opened it once. Adding it to your home screen makes this more reliable.
 
 **Is it free?** Yes. No subscription, no account and no ads. If you find it useful, you can support it on
 Ko-fi: https://ko-fi.com/anonacondacodelab.
+
+## Support
+Questions or problems: **hello@anonacondacodelab.com**. A description or a screenshot is usually enough. Rounds is free
+software under the GNU GPL v3; the source code is at https://github.com/Anonaconda-CodeLab/rounds

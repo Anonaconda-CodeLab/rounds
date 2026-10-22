@@ -1,0 +1,25 @@
+/* Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later
+   Styles for the Android download page (android.html). */
+:root{--bg:#F4F2EE;--surface:#fff;--fg:#16181D;--muted:#6b6862;--line:#e2ded6;--accent:#C7381A;--ok:#1b7655;--ok-soft:#dcefe5;--warn-soft:#f9ebd3;--code:#ece7e7}
+@media (prefers-color-scheme:dark){:root{--bg:#121317;--surface:#1C1E23;--fg:#EDEAE4;--muted:#9A978F;--line:#2C2F36;--accent:#F07A55;--ok:#5cc49a;--ok-soft:#1d3a2f;--warn-soft:#3b2f1a;--code:#2a252c;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:680px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left)) 48px max(16px,env(safe-area-inset-right))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:20px;margin-bottom:18px}
+.brand svg{width:34px;height:34px}
+h1{font-size:30px;line-height:1.15;margin:0 0 8px;text-wrap:balance}
+h2{font-size:19px;margin:30px 0 8px}
+p,li{max-width:62ch}
+a{color:var(--accent)}
+.lead{color:var(--muted);margin:0 0 18px}
+.banner{border-radius:14px;padding:14px 16px;margin:0 0 18px;font-weight:600}
+.banner.ok{background:var(--ok-soft)}
+.banner.new{background:var(--warn-soft)}
+.dl{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;border-radius:999px;padding:14px 26px;font-size:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 18px 14px;margin:14px 0}
+ol,ul{padding-left:22px}
+li{margin:6px 0}
+code,.fp{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;background:var(--code);border-radius:6px;padding:1px 6px}
+.fp{display:block;padding:10px 12px;word-break:break-all;line-height:1.6;margin:8px 0}
+.muted{color:var(--muted);font-size:14px}
+footer{margin-top:34px;color:var(--muted);font-size:14px}

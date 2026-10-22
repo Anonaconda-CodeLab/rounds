@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later
+     Template for the Android download page (build.mjs fills it into dist/android.html). The app's "Check for updates" button opens it as android.html?v=<installed version>. -->
+<html lang="en" data-latest="{{VERSION}}"><head><meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#16181D">
+<meta name="description" content="Install {{APP_NAME}} on Android: official download, how to check it, and how to keep it up to date.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>{{APP_NAME}} for Android</title>
+<link rel="stylesheet" href="android.css"></head><body><main>
+<div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#E2451F"/><circle cx="32" cy="32" r="17" fill="none" stroke="#fff" stroke-width="7"/><circle cx="32" cy="32" r="5.5" fill="#16181D"/></svg>{{APP_NAME}}</div>
+<h1>{{APP_NAME}} for Android</h1>
+<p class="lead">The same app as the web version, with beeps and spoken cues that keep going while the screen is off. Free and open source. It has no internet permission: your timers never leave your phone.</p>
+<div id="status" class="banner" hidden></div>
+<p><a class="dl" href="{{REPO}}/releases/latest">Download the latest version</a></p>
+<p class="muted">Latest version: {{VERSION}}. The download is the file <code>{{FILE_PREFIX}}-{{VERSION}}.apk</code> on the release page, which also lists its SHA-256 checksum.</p>
+
+<h2>Install it</h2>
+<ol>
+  <li>Download the <code>.apk</code> file from the release page.</li>
+  <li>Open it. Android asks you to allow your browser or file manager to <b>install unknown apps</b>: allow it for this one install.</li>
+  <li>Open {{APP_NAME}}. When you start your first timer it asks to show <b>notifications</b>: that notification is what keeps it running with the screen off. It asks for <b>Nearby devices</b> (Bluetooth) only if you connect a heart-rate strap.</li>
+</ol>
+<p class="muted">Updates install over the old version and keep your timers. Moving from the web app? In the web app use <b>Settings → Save timers to file</b>, then <b>Import timers</b> in the Android app. Prefer not to install anything? <a href="{{APP_URL}}/">Use the web app</a> in any browser.</p>
+
+<h2>Check that it's the official build</h2>
+<p>This is the official download. Copies elsewhere are allowed by the licence, so check any APK before installing it:</p>
+<ul>
+  <li><b>Checksum:</b> compare the file's SHA-256 with the one on the release page. On a computer: <code>sha256sum {{FILE_PREFIX}}-{{VERSION}}.apk</code> (Linux, macOS: <code>shasum -a 256</code>, Windows: <code>certutil -hashfile {{FILE_PREFIX}}-{{VERSION}}.apk SHA256</code>).</li>
+  <li><b>Signing certificate:</b> every official build is signed with the same key. Apps such as AppVerifier show an installed app's certificate; it must match:</li>
+</ul>
+<span class="fp">{{CERT}}</span>
+
+<h2>Keep it up to date</h2>
+<ul>
+  <li>In the app: <b>Settings → Check for updates</b> opens this page and tells you if a newer version exists.</li>
+  <li>Automatically: add <code>{{REPO}}</code> to <b>Obtainium</b>, a free app that watches GitHub releases and installs updates.</li>
+</ul>
+
+<h2>Install from a computer</h2>
+<p>With USB debugging turned on in the phone's Developer options: <code>adb install {{FILE_PREFIX}}-{{VERSION}}.apk</code>. A one-click installer that runs in Chrome on your computer is on the way.</p>
+
+<h2>Why isn't it on Google Play?</h2>
+<p>Our apps are free, open source and collect nothing. Publishing on Google Play means registering with Google, handing over government ID and paying a fee. Google is now extending that identity check beyond its own store: since 30 September 2026, apps from participating app stores in Brazil, Indonesia, Singapore and Thailand must come from developers verified by Google, and Google plans to require this for all apps on certified Android phones worldwide from 2027.</p>
+<p>We believe you should be able to install software you choose on a phone you own, without asking Google's permission, so we support <a href="https://keepandroidopen.org">Keep Android Open</a> and distribute directly instead. If your phone one day refuses an app from an unverified developer, Android's <b>advanced flow</b> (in Developer options; a one-time 24-hour wait) or an install from a computer still works.</p>
+
+<footer>
+  <p>{{APP_NAME}} is free software under the GNU General Public License v3 or later, with no warranty. <a href="{{REPO}}">Source code</a>{{CONTACT_LINE}}</p>
+  <p>High-intensity intervals are demanding: if you are new to hard exercise or have a heart condition, check with a doctor first.</p>
+</footer>
+</main>
+<script src="android.js"></script>
+</body></html>

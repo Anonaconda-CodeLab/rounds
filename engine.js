@@ -1,5 +1,6 @@
 /* Rounds: timer engine. Turns a timer's settings into a list of segments and a list of beeps.
-   No DOM here, so it can be tested on its own. */
+   No DOM here, so it can be tested on its own. 
+   Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
 'use strict';
 
 const KIND_LABEL = { ready: 'Get ready', warm: 'Warm-up', work: 'Work', rest: 'Rest', setrest: 'Set break', cool: 'Cool-down' };

@@ -1,6 +1,7 @@
-/* Rounds: screens, storage, sound. Everything stays on this device. */
+/* Rounds: screens, storage, sound. Everything stays on this device.
+   Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
 'use strict';
-const VERSION = '1.2.4';
+const VERSION = '1.3.0';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -359,7 +360,8 @@ let hrArm = 0;
 function confirmHR() { const n = Date.now(); if (n - hrArm < 3000) { hrArm = 0; return true; } hrArm = n; toast('Tap ♥ again to disconnect'); return false; }
 
 /* ---------- start ---------- */
-$('#ver').textContent = VERSION;
+$('#ver').textContent = VERSION; $('#aboutVer').textContent = VERSION;
+$('#btnUpdates').href = 'https://rounds.anonacondacodelab.com/android.html?v=' + VERSION;   // the page says whether a newer version exists
 renderHome(); drawHR();
 /* Android Back button: back inside the app; on the home screen or during a timer the app moves to the background */
 window.appBack = () => {

@@ -1,7 +1,8 @@
 /* Rounds: optional live heart rate from any Bluetooth strap or watch that sends the standard Heart Rate signal
    (Polar, Garmin HRM-Dual/Pro, Wahoo TICKR, Coospo and most others). Works where the browser has Web Bluetooth:
    Chrome or Chromium on Android and desktop, and Bluefy on iPhone and iPad. Readings stay in memory on this device:
-   nothing is saved or sent anywhere. */
+   nothing is saved or sent anywhere. 
+   Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
 (function (root) {
   'use strict';
   // Heart Rate Measurement (0x2A37): flags byte; bit 0 set = 16-bit value, else 8-bit
