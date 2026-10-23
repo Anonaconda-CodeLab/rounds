@@ -298,7 +298,11 @@ function render() {
     $('#rNext').textContent = nx ? `Next: ${nx.label || E.KIND_LABEL[nx.kind]} ${E.fmtTime(nx.dur)}` : 'Last one';
     $('#rStatus').textContent = phaseWords(g);
     $('#btnSkipWarm').hidden = g.kind !== 'warm';
-    if (!first && !R.paused) { speak(phaseWords(g)); vibrate(g.kind === 'work' ? [350] : [150, 90, 150]); }
+    if (!first && !R.paused) {
+      // the voice waits until the long go/stop beep has finished, which would otherwise drown it out ("Rest" in particular)
+      const words = phaseWords(g); clearTimeout(R.sayT); R.sayT = setTimeout(() => { if (!R.paused && !R.done) speak(words); }, 750);
+      vibrate(g.kind === 'work' ? [350] : [150, 90, 150]);
+    }
   }
   const left = Math.ceil(L.left - 1e-6);
   $('#rTime').textContent = E.fmtTime(left);
@@ -318,10 +322,11 @@ function finish() {
   $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
   const hs = window.HR ? HR.hrStats(R.hr) : null;
   $('#fHR').hidden = !hs; if (hs) $('#fHR').textContent = `♥ Work rounds: ${hs.avg} bpm average · ${hs.peak} peak`;
-  $('#finish').hidden = false; speak('Finished. Well done.'); vibrate([200, 100, 200, 100, 400]);
+  $('#finish').hidden = false; clearTimeout(R.sayT); setTimeout(() => speak('Finished. Well done.'), 1200);   // after the finishing beeps vibrate([200, 100, 200, 100, 400]);
 }
 function setPaused(p) {
-  $('#icPause').hidden = p; $('#icPlay').hidden = !p; $('#btnPause').setAttribute('aria-label', p ? 'Resume' : 'Pause');
+  // SVG elements have no .hidden property, so the attribute is set directly
+  $('#icPause').toggleAttribute('hidden', p); $('#icPlay').toggleAttribute('hidden', !p); $('#btnPause').setAttribute('aria-label', p ? 'Resume' : 'Pause');
 }
 function seek(t) {   // jump to time t (seconds from Start)
   t = Math.max(0, Math.min(t, E.totalDuration(R.segs) - 0.05));
@@ -330,7 +335,7 @@ function seek(t) {   // jump to time t (seconds from Start)
 }
 $('#btnPause').onclick = () => {
   if (R.done) return;
-  if (!R.paused) { R.pauseAt = curT(); R.paused = true; cancelBeeps(); try { speechSynthesis.cancel(); } catch (e) {} letSleep(); }
+  if (!R.paused) { R.pauseAt = curT(); R.paused = true; clearTimeout(R.sayT); cancelBeeps(); try { speechSynthesis.cancel(); } catch (e) {} letSleep(); }
   else { R.t0 = now() - R.pauseAt; R.paused = false; schedule(); keepAwake(); }
   setPaused(R.paused); render();
 };
@@ -342,7 +347,7 @@ $('#btnEnd').onclick = function () {
   if (!this.dataset.arm && !R.done) { this.dataset.arm = 1; this.classList.add('armed'); this.textContent = 'Tap to end'; setTimeout(disarmEnd, 3000); return; }
   stopRun();
 };
-function stopRun() { R.done = true; cancelAnimationFrame(R.raf); clearInterval(R.iv); cancelBeeps(); letSleep(); try { speechSynthesis.cancel(); } catch (e) {} delete document.body.dataset.phase; renderHome(); show('home'); }
+function stopRun() { R.done = true; clearTimeout(R.sayT); cancelAnimationFrame(R.raf); clearInterval(R.iv); cancelBeeps(); letSleep(); try { speechSynthesis.cancel(); } catch (e) {} delete document.body.dataset.phase; renderHome(); show('home'); }
 $('#btnAgain').onclick = () => startRun(R.t);
 $('#btnHome').onclick = stopRun;
 document.addEventListener('keydown', e => { if (document.body.dataset.screen === 'run' && e.code === 'Space') { e.preventDefault(); $('#btnPause').click(); } });
