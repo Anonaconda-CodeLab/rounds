@@ -5,6 +5,9 @@
   https://rounds.anonacondacodelab.com/android.html
 - Android app: the timer, beeps and spoken cues keep going with the screen off; no internet permission at all;
   **Check for updates** in Settings; links open in your browser or mail app.
+- **Skip warm-up** button during a warm-up.
+- Beeps stay in step with the timer: they allow for the phone's audio delay and are re-timed if the clocks drift apart.
+- Android app: spoken cues use the media volume at full level, like the beeps (they were much quieter).
 - **About Rounds** in Settings: version, licence, contact address (hello@anonacondacodelab.com), source code and manual.
 - Source code published at https://github.com/Anonaconda-CodeLab/rounds. Releases are built from tagged source by GitHub
   Actions, with the APK's SHA-256 checksum and the signing certificate's fingerprint in every release.

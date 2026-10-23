@@ -199,3 +199,4 @@ body[data-phase="done"]{--ph:var(--done);--ph-ink:#fff}
 .backup .row a.btn{text-decoration:none;display:inline-block}
 .native-only{display:none !important}
 .native .native-only{display:inline-block !important}
+.phase .skip{margin-top:8px;color:inherit}

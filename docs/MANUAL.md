@@ -20,7 +20,9 @@ then has its own icon, opens full screen and works offline.
 - **Halfway beep** (optional): one short beep halfway through work rounds of 2 minutes or more. Switch it on in
   Settings.
 
-The beeps are scheduled in advance on the phone's audio clock, so they stay on time even if the screen is busy. Use
+The beeps are scheduled in advance on the phone's audio clock, so they stay on time even if the screen is busy. Rounds
+allows for the delay before a phone's speaker actually plays a sound, and re-times the beeps if the audio and the timer
+drift apart, so you hear each beep as the timer changes. Use
 **Test the beeps** in Settings to hear them all.
 
 ## The home screen
@@ -80,6 +82,7 @@ you made.
 - The whole screen changes colour with the phase, so you can see from across the room whether it's work or rest.
 - The **ring** empties as the current period runs down, with the time left in the middle. Above it is the phase and
   the round (for example *Round 3 / 8 · Set 1 / 2*); below it, what comes next.
+- **Skip warm-up** appears during a warm-up and jumps straight to the first round.
 - **Pause** stops the timer and the beeps; tap again to carry on.
 - **Back** (⏮) goes back to the start of the current period (or the previous one, if you're in the first two seconds);
   **Skip** (⏭) skips to the next period.

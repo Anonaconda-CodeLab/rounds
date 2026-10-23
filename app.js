@@ -217,19 +217,37 @@ function beepAt(type, when) {
     const o = a.createOscillator(), g = a.createGain(), t = when + off;
     o.type = 'square'; o.frequency.value = f; o.connect(g); g.connect(bus);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9, t + 0.008); g.gain.setValueAtTime(0.9, t + d - 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.start(t); o.stop(t + d + 0.03); scheduled.push(o);
+    o.start(t); o.stop(t + d + 0.03); scheduled.push({ o, t });
   }
 }
-function cancelBeeps() { for (const o of scheduled) { try { o.stop(); o.disconnect(); } catch (e) {} } scheduled = []; }
+/* all beeps (pause, stop, seek), or only those that haven't started yet (resync, so a beep that is playing isn't cut off) */
+function cancelBeeps(futureOnly) {
+  const now = AC ? AC.currentTime : 0, keep = [];
+  for (const x of scheduled) { if (futureOnly && x.t <= now + 0.01) { keep.push(x); continue; } try { x.o.stop(); x.o.disconnect(); } catch (e) {} }
+  scheduled = keep;
+}
 
 /* ---------- run ---------- */
 const R = { hr: [], t: null, segs: [], beeps: [], t0: 0, paused: false, pauseAt: 0, idx: -1, done: false, raf: 0, iv: 0 };
 const now = () => performance.now() / 1000;
 const curT = () => R.paused ? R.pauseAt : now() - R.t0;
-function schedule() {   // all remaining beeps go to the audio clock, so they stay on time even if the screen is busy
-  cancelBeeps(); const a = audio(); if (!a) return;
-  const t = curT(), off = a.currentTime - t;
-  for (const b of R.beeps) if (b.t > t - 0.06) beepAt(b.type, Math.max(a.currentTime + 0.01, off + b.t));   // includes the beep at 0
+/* All remaining beeps go to the audio clock, so they stay on time even if the screen is busy. They are scheduled earlier
+   by the device's output latency (often 0.1 to 0.3 s on Android), so you hear them when the timer shows the change. */
+const audioLag = a => Math.min(0.5, Math.max(0, (a.outputLatency || 0) + (a.baseLatency || 0)));
+function schedule(resync) {
+  cancelBeeps(resync); const a = audio(); if (!a) return;
+  const t = curT(), off = a.currentTime - t, lag = audioLag(a);
+  R.audioOff = off;
+  // a fresh start includes the beep at 0; a resync skips beeps that are already playing
+  for (const b of R.beeps) if (b.t > t + (resync ? 0.03 : -0.06)) beepAt(b.type, Math.max(a.currentTime + 0.01, off + b.t - lag));
+}
+/* the audio clock and the screen's clock can drift apart (or the audio can start late); if they do, reschedule */
+function checkDrift() {
+  if (!AC || R.paused || R.done || R.audioOff == null || AC.state !== 'running') return;
+  // the audio clock moves in small steps, so only a drift seen twice in a row and over 0.1 s counts
+  const drift = Math.abs(AC.currentTime - curT() - R.audioOff);
+  R.driftSeen = drift > 0.1 ? (R.driftSeen || 0) + 1 : 0;
+  if (R.driftSeen >= 2) { R.driftSeen = 0; schedule(true); }
 }
 function halfBeeps(segs) {
   if (!settings.half) return [];
@@ -267,6 +285,7 @@ function render() {
   if (document.body.dataset.screen !== 'run' || R.done) return;
   const t = curT(), total = E.totalDuration(R.segs), L = E.locate(R.segs, t), g = L.seg;
   if (t >= total) return finish();
+  checkDrift();
   if (L.i !== R.idx) {
     const first = R.idx < 0; R.idx = L.i;
     document.body.dataset.phase = g.kind;
@@ -278,6 +297,7 @@ function render() {
     const nx = R.segs[L.i + 1];
     $('#rNext').textContent = nx ? `Next: ${nx.label || E.KIND_LABEL[nx.kind]} ${E.fmtTime(nx.dur)}` : 'Last one';
     $('#rStatus').textContent = phaseWords(g);
+    $('#btnSkipWarm').hidden = g.kind !== 'warm';
     if (!first && !R.paused) { speak(phaseWords(g)); vibrate(g.kind === 'work' ? [350] : [150, 90, 150]); }
   }
   const left = Math.ceil(L.left - 1e-6);
@@ -314,6 +334,7 @@ $('#btnPause').onclick = () => {
   else { R.t0 = now() - R.pauseAt; R.paused = false; schedule(); keepAwake(); }
   setPaused(R.paused); render();
 };
+$('#btnSkipWarm').onclick = () => { const L = E.locate(R.segs, curT()); if (L.seg && L.seg.kind === 'warm') seek(L.seg.start + L.seg.dur); };
 $('#btnNext').onclick = () => { const L = E.locate(R.segs, curT()); const nx = R.segs[L.i + 1]; if (nx) seek(nx.start); else finish(); };
 $('#btnPrev').onclick = () => { const t = curT(), L = E.locate(R.segs, t); seek(t - L.seg.start > 2 || L.i === 0 ? L.seg.start : R.segs[L.i - 1].start); };
 function disarmEnd() { const b = $('#btnEnd'); b.classList.remove('armed'); b.textContent = 'End'; delete b.dataset.arm; }
