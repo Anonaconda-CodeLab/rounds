@@ -244,7 +244,7 @@ function speak(text) {
   if (!settings.voice) return;
   if (NATIVE) { AppNative.speak(text); return; }   // Android's WebView has no speechSynthesis; the phone's own voice is used
   if (!('speechSynthesis' in window)) return;
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; speechSynthesis.speak(u); } catch (e) {}
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; u.volume = 1; speechSynthesis.speak(u); } catch (e) {}
 }
 function vibrate(p) { if (settings.vibrate && NATIVE) { AppNative.vibrate(p); return; } if (settings.vibrate && navigator.vibrate) try { navigator.vibrate(p); } catch (e) {} }
 
