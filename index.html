@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#16181D">
@@ -40,9 +40,9 @@
   <button id="btnNew" class="new-btn"><span>+</span>New timer</button>
 
   <h2 class="sec" id="favHead" hidden>★ Favourites</h2>
-  <ul id="favList" class="cards"></ul>
+  <ul id="favList" translate="no" class="cards"></ul>
   <h2 class="sec" id="mineHead" hidden>Your timers</h2>
-  <ul id="mineList" class="cards"></ul>
+  <ul id="mineList" translate="no" class="cards"></ul>
   <h2 class="sec" id="presetHead">Presets</h2>
   <div id="goalChips" class="chips" role="group" aria-label="What are you training for?"></div>
   <div class="sortrow"><button id="btnHard" class="sort-btn" aria-pressed="false">↓ Hardest first</button><span id="hardNote" class="sort-note" hidden>Ranked by how hard the efforts are, how short the rests, and how much there is in total.</span></div>
@@ -59,9 +59,9 @@
     </ul>
   </details>
   <footer class="foot">
-    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>
+    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>
     <p>Free and open source. No account, no ads, no tracking: your timers stay on this device.</p>
-    <p><a href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a> · <a href="https://anonacondacodelab.com" target="_blank" rel="noopener noreferrer">Anonaconda Code Lab</a></p>
+    <p><a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">☕ Support on Ko-fi</a> · <a href="https://anonacondacodelab.com" rel="noopener noreferrer">Anonaconda Code Lab</a></p>
     <p class="fine">© 2026 Anonaconda Code Lab · GNU GPL v3 or later · version <span id="ver"></span></p>
   </footer>
 </section>
@@ -128,7 +128,7 @@
       <h3>About Rounds</h3>
       <p>Version <span id="aboutVer"></span> · free and open source. © 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty.</p>
       <p>Questions or problems: <a href="mailto:hello@anonacondacodelab.com">hello@anonacondacodelab.com</a>. A description or a screenshot is usually enough.</p>
-      <div class="row"><a id="btnUpdates" class="btn native-only" href="https://rounds.anonacondacodelab.com/android.html" target="_blank" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/rounds" target="_blank" rel="noopener noreferrer">Source code</a><a class="btn" href="https://anonacondacodelab.com/rounds/manual/" target="_blank" rel="noopener noreferrer">User manual</a></div>
+      <div class="row"><a id="btnUpdates" class="btn native-only" href="https://rounds.anonacondacodelab.com/android.html" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/rounds" rel="noopener noreferrer">Source code</a><a class="btn" href="https://anonacondacodelab.com/rounds/manual/" rel="noopener noreferrer">User manual</a></div>
     </div>
   </div>
 </section>
@@ -137,7 +137,7 @@
 <section id="run" class="screen" hidden>
   <header class="run-top">
     <button id="btnEnd" class="pill">End</button>
-    <span id="rName" class="run-name"></span>
+    <span id="rName" translate="no" class="run-name"></span>
     <span id="rTotal" class="run-total"></span>
   </header>
   <div class="phase"><b id="rPhase">Get ready</b><span id="rLabel"></span><button id="btnSkipWarm" class="pill skip" hidden>Skip warm-up ›</button></div>
@@ -160,8 +160,8 @@
   <p id="rStatus" class="sr" aria-live="polite"></p>
   <div id="finish" class="finish" hidden>
     <h2>Done!</h2>
-    <p id="fDone"></p>
-    <p id="fHR" class="f-hr" hidden></p>
+    <p id="fDone" translate="no"></p>
+    <p id="fHR" translate="no" class="f-hr" hidden></p>
     <div class="acts"><button id="btnAgain" class="btn primary">Again</button><button id="btnHome" class="btn">Home</button></div>
   </div>
 </section>

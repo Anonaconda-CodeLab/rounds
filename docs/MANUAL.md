@@ -126,6 +126,11 @@ In **Settings → Your timers**:
 Your timers are stored in the browser on this device. Clearing the browser's site data deletes them, so save a backup
 now and then if you have many.
 
+## Privacy
+Rounds has no server, no account and no tracking. Your timers stay on your device, and heart rate is shown only, never saved or sent. Opening the web app is an ordinary visit to its website, like any page; after that, the only thing it ever asks that website for is a newer copy of itself, so updates arrive. The Android app has no internet permission at all.
+
+**Translating the page.** If you use your browser's *Translate* button, the browser sends the page's text to its translation service (Google's, in Chrome). Rounds marks your timer names and heart rate so the translator leaves them out: only the app's own buttons and labels are translated.
+
 ## The Android app
 Rounds is also an Android app: the same app, with the timer, beeps and spoken cues keeping going while the screen is
 off, and **no internet permission** at all. It is not on Google Play; download it from

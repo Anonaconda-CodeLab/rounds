@@ -10,8 +10,8 @@ your own: warm-up, work, rest, rounds, sets with a break between them, cool-down
   rate signal (Polar, Garmin HRM-Dual/Pro, Wahoo TICKR, Coospo and most others). The finish screen shows your average and
   peak heart rate in the work rounds. Needs Web Bluetooth: Chrome or Chromium on Android or desktop, or Bluefy on iPhone
   and iPad; elsewhere the button simply doesn't appear. Readings are shown only, never saved or sent.
-- Free and open source. No account, no ads, no tracking. Timers are stored on your device; the app makes no network
-  requests and works offline once added to the home screen.
+- Free and open source. No account, no ads, no tracking. Timers are stored on your device and never sent anywhere; the web
+  app only fetches newer copies of its own files, and works offline once added to the home screen.
 
 ## Android app
 Download the APK from the [latest release](https://github.com/Anonaconda-CodeLab/rounds/releases/latest). The
