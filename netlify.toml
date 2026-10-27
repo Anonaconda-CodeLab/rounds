@@ -1,6 +1,4 @@
-# Netlify builds the app into dist/ and publishes only that folder.
+# This site has moved to Cloudflare Pages. Netlify skips every build (exit 0 = skip, which costs no credits) until the
+# old Netlify project is deleted; then this file can go.
 [build]
-  command = "node build.mjs"
-  publish = "dist"
-  # Skip the deploy (it costs credits) when only files that aren't part of the website changed
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)mobile' ':(exclude)tests' ':(exclude).github' ':(exclude)README.md' ':(exclude)docs'"
+  ignore = "exit 0"

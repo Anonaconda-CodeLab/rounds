@@ -27,7 +27,8 @@ listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 Plain HTML, CSS and JavaScript. `engine.js` holds the timer logic and `hr.js` the heart-rate connection; both are tested with `npm test`.
-`node build.mjs` copies the app's own files into `dist/`, which is what the website publishes (`netlify.toml`) and what the
+`node build.mjs` copies the app's own files into `dist/`, which is what the website publishes (Cloudflare Pages runs the
+build; `_headers` holds the HTTP headers) and what the
 Android app in `mobile/` is made from.
 
 © 2026 Anonaconda Code Lab. GNU General Public License v3.0 or later (see `LICENSE`). Fonts: Instrument Sans and IBM Plex

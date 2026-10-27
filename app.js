@@ -1,7 +1,7 @@
 /* Rounds: screens, storage, sound. Everything stays on this device.
    Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
 'use strict';
-const VERSION = '1.3.0';
+const VERSION = '1.3.1';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 

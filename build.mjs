@@ -1,5 +1,5 @@
 // Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later
-// Builds the published app: copies the app's own files into dist/. Netlify publishes only dist/ (see netlify.toml),
+// Builds the published app: copies the app's own files into dist/. Cloudflare Pages runs this and publishes only dist/,
 // and the Android app is made from the same folder, so tests, Android sources and notes never reach the website.
 import { cpSync, rmSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';

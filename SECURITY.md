@@ -4,7 +4,8 @@
 - **No outside connections.** The site's Content Security Policy (`_headers`, also in `index.html`) only allows the app's
   own files (`default-src 'none'`, scripts, styles, fonts and connections from the same site only), so it cannot send
   anything elsewhere, even if malicious code were injected. There are no external scripts, analytics or trackers. The only
-  outbound links (source code, manual, Ko-fi, email) open in a new, isolated tab (`rel="noopener noreferrer"`).
+  outbound links (source code, manual, Ko-fi, email) open in the same tab (`rel="noopener noreferrer"`). The page itself
+  may make no connections at all; only the offline helper (`sw.js`) may fetch the app's own files.
 - **Local storage only.** Timers, favourites and settings are stored in the browser's localStorage on the user's own
   device. Nothing is uploaded. Data leaves the device only when the user saves a timers file.
 - **Untrusted input.** Imported timer files are validated (types, ranges, lengths) and all text is HTML-escaped before

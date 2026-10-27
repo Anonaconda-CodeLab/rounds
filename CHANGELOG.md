@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1
+- Links open in the same tab, and the page's security policy now blocks all connections (the offline helper
+  still fetches newer copies of the app's own files).
+- Timer names and heart rate are marked so a browser's Translate button leaves them out (translation sends the
+  page's text to an online service). New Privacy section in the manual.
+- **New home:** the website moved to Cloudflare Pages, with stricter security headers: no other site can show
+  the app inside its own page, and browsers always use HTTPS.
+- Shorter thank-you line at the bottom of the start screen.
+
 ## 1.3.0
 - First public release, with the **Android app** alongside the web app. Download, install guide and checksums:
   https://rounds.anonacondacodelab.com/android.html

@@ -1,7 +1,7 @@
 node_modules/
 .DS_Store
 
-# Built app (made by build.mjs; Netlify and the Android build make it themselves)
+# Built app (made by build.mjs; Cloudflare Pages and the Android build make it themselves)
 dist/
 
 # Android signing keys never go in the repository

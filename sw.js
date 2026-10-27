@@ -1,6 +1,6 @@
 /* Rounds: offline support. Caches the app's own files; it never contacts any other site.
    Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
-const CACHE = 'rounds-1.3.0';
+const CACHE = 'rounds-1.3.1';
 const FILES = ['./', 'index.html', 'style.css', 'engine.js', 'native.js', 'hr.js', 'app.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'maskable-512.png', 'apple-touch-icon.png', 'fonts/InstrumentSans-latin-variable.woff2', 'fonts/IBMPlexMono-latin-500.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
