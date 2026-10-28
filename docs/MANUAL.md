@@ -86,7 +86,8 @@ you made.
 - **Pause** stops the timer and the beeps; tap again to carry on.
 - **Back** (⏮) goes back to the start of the current period (or the previous one, if you're in the first two seconds);
   **Skip** (⏭) skips to the next period.
-- **End** asks you to tap again within three seconds, so a stray tap can't stop your workout.
+- **End** asks you to tap again within three seconds, so a stray tap can't stop your workout. Ending a timer early still shows the
+  finish screen, with the work rounds you finished, the time so far and your heart rate and zones up to then.
 - The screen stays on while a timer runs.
 
 When the timer finishes, you see how many work rounds you did and the total time. **Again** runs the same timer once
@@ -136,7 +137,7 @@ device with your timers, and *Save timers to file* includes it.
 While a strap is connected, a ring of the five zones appears around the timer, with a marker at your current heart
 rate and your zone (for example **Z4 · 86% MAX**, or **% HRR** with a resting heart rate) at the bottom left of the
 dial. If readings stop, the ring dims and the zone shows **–** until they come back. Without a strap, or with zones
-not set up, the timer looks as it always has. The finish screen shows how long you spent in each zone.
+not set up, the timer looks as it always has. The finish screen shows how long you spent in each zone, also when you end a timer early.
 
 Zones are a guide for training, not medical advice.
 

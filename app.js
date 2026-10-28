@@ -320,15 +320,25 @@ function render() {
   $('#rTotal').textContent = E.fmtTime(total - t);
   $('#rBar').style.width = (100 * Math.min(1, t / total)).toFixed(2) + '%';
 }
-function finish() {
+/* the finish screen; early = ended with End before the last segment, so it shows what was done up to that moment
+   (rounds, heart rate, time in zones), with no finishing voice */
+function finish(early) {
+  const t = curT();
   R.done = true; cancelAnimationFrame(R.raf); clearInterval(R.iv); letSleep();
   document.body.dataset.phase = 'done';
-  const work = R.segs.filter(g => g.kind === 'work');
-  $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
+  if (early) {
+    clearTimeout(R.sayT); cancelBeeps(); try { speechSynthesis.cancel(); } catch (e) {}
+    const d = E.doneSoFar(R.segs, t);
+    $('#fDone').textContent = `Ended early · ${d.workDone} of ${d.workTotal} work round${d.workTotal === 1 ? '' : 's'} · ${E.fmtTime(d.elapsed)}`;
+  } else {
+    const work = R.segs.filter(g => g.kind === 'work');
+    $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
+  }
   const hs = window.HR ? HR.hrStats(R.hr) : null;
   $('#fHR').hidden = !hs; if (hs) $('#fHR').textContent = `♥ Work rounds: ${hs.avg} bpm average · ${hs.peak} peak`;
   drawZoneTimes();
-  $('#finish').hidden = false; clearTimeout(R.sayT); setTimeout(() => speak('Finished. Well done.'), 1200);   // after the finishing beeps vibrate([200, 100, 200, 100, 400]);
+  $('#finish').hidden = false; if (early) return;
+  clearTimeout(R.sayT); setTimeout(() => speak('Finished. Well done.'), 1200);   // after the finishing beeps vibrate([200, 100, 200, 100, 400]);
 }
 function setPaused(p) {
   // SVG elements have no .hidden property, so the attribute is set directly
@@ -351,7 +361,9 @@ $('#btnPrev').onclick = () => { const t = curT(), L = E.locate(R.segs, t); seek(
 function disarmEnd() { const b = $('#btnEnd'); b.classList.remove('armed'); b.textContent = 'End'; delete b.dataset.arm; }
 $('#btnEnd').onclick = function () {
   if (!this.dataset.arm && !R.done) { this.dataset.arm = 1; this.classList.add('armed'); this.textContent = 'Tap to end'; setTimeout(disarmEnd, 3000); return; }
-  stopRun();
+  disarmEnd();
+  // ended during "get ready": nothing was done yet, so straight home; otherwise the finish screen with what was done
+  if (!R.done && curT() > E.LEAD_IN) finish(true); else stopRun();
 };
 function stopRun() { R.done = true; clearTimeout(R.sayT); cancelAnimationFrame(R.raf); clearInterval(R.iv); cancelBeeps(); letSleep(); try { speechSynthesis.cancel(); } catch (e) {} delete document.body.dataset.phase; renderHome(); show('home'); }
 $('#btnAgain').onclick = () => startRun(R.t);

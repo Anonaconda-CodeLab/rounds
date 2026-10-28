@@ -95,3 +95,13 @@ test('hardest-first ranking covers every preset exactly once', () => {
   assert.deepEqual([...E.HARDEST].sort(), ids);
   assert.equal(E.HARDEST[0], 'p-tabata');
 });
+
+test('ended early: finished work rounds only, and time since "get ready"', () => {
+  const segs = E.compile(E.normalize({ name: 'x', work: 20, rest: 10, rounds: 4, sets: 1, warm: 60, cool: 120 }));
+  const w = segs.filter(g => g.kind === 'work');
+  assert.deepEqual(E.doneSoFar(segs, 2), { workDone: 0, workTotal: 4, elapsed: 0 });            // still getting ready
+  assert.equal(E.doneSoFar(segs, w[1].start + 5).workDone, 1);                                  // second round under way
+  assert.equal(E.doneSoFar(segs, w[1].start + w[1].dur).workDone, 2);
+  const cool = segs.find(g => g.kind === 'cool');
+  assert.deepEqual(E.doneSoFar(segs, cool.start + 30), { workDone: 4, workTotal: 4, elapsed: Math.round(cool.start + 30 - E.LEAD_IN) });
+});

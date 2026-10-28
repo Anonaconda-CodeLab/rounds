@@ -222,5 +222,11 @@ const PRESETS = [
 // there is in total. All-out sprint work ranks above steady hard work; self-paced sessions sit lower.
 const HARDEST = ['p-tabata', 'p-gibalasit', 'p-4x4', 'p-hiit4020', 'p-boxing', 'p-little', 'p-gibala10', 'p-102030', 'p-3030',
   'p-tempo', 'p-amrap15', 'p-pyramid', 'p-oneminute', 'p-emom10', 'p-fartlek', 'p-plank'];
-const Engine = { HARDEST, KIND_LABEL, LEAD_IN, GOALS, normalize, compile, roundSteps, fartlekSteps, totalDuration, beepPlan, locate, fmtTime, parseTime, summary, PRESETS };
+/* what was done by time t (seconds from Start), for the finish screen when a timer is ended early: work rounds finished
+   (a work round still under way doesn't count) and time since "get ready" */
+function doneSoFar(segs, t) {
+  const work = segs.filter(g => g.kind === 'work');
+  return { workDone: work.filter(g => g.start + g.dur <= t + 0.5).length, workTotal: work.length, elapsed: Math.max(0, Math.round(t - LEAD_IN)) };
+}
+const Engine = { HARDEST, KIND_LABEL, LEAD_IN, GOALS, normalize, compile, roundSteps, fartlekSteps, totalDuration, beepPlan, locate, fmtTime, parseTime, summary, doneSoFar, PRESETS };
 if (typeof module !== 'undefined' && module.exports) module.exports = Engine; else globalThis.Engine = Engine;
