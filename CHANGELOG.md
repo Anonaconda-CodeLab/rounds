@@ -5,6 +5,7 @@
   (208 − 0.7 × age), and optionally your resting heart rate to base the zones on heart-rate reserve. While a strap is
   connected, a ring of five coloured zones around the timer shows which zone you're in, and the finish screen shows
   your time in each zone. Stored only on this device, and included in *Save timers to file*.
+  A one-time card on the start screen points to the setup.
 - Ending a timer early with **End** now shows the finish screen too, with the work rounds you finished, the
   time so far, and your heart rate and zones up to then (it went straight back to the start screen).
 - New thank-you line at the bottom of the start screen.

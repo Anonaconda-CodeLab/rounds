@@ -242,3 +242,8 @@ i.z0{background:var(--z0)} i.z1{background:var(--z1)} i.z2{background:var(--z2)}
 .f-zones li{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px}
 .f-zones li b{font-family:var(--f-mono);font-weight:500;font-size:15px;font-variant-numeric:tabular-nums}
 .grid3 .field input::placeholder{font-family:var(--f-sans);font-size:15px}
+/* one-time card on the start screen: set up heart-rate zones */
+.tip{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:16px;padding:12px 14px;margin:0 0 16px;display:grid;gap:10px}
+.tip p{margin:0;font-size:15px}
+.tip-h{color:var(--accent)}
+.tip .btn{padding:9px 18px;font-size:15px}

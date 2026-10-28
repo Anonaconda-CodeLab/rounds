@@ -166,7 +166,7 @@ $('#btnDelete').onclick = function () {
 const bindSwitch = (id, key) => { const el = $(id); el.checked = !!settings[key]; el.onchange = () => { settings[key] = el.checked; store.set('settings', settings); }; };
 bindSwitch('#sVoice', 'voice'); bindSwitch('#sVibrate', 'vibrate'); bindSwitch('#sHalf', 'half');
 $('#btnSettings').onclick = () => show('settings');
-$('#btnSetBack').onclick = () => show('home');
+$('#btnSetBack').onclick = () => { drawZoneTip(); show('home'); };
 $('#btnTest').onclick = () => { const a = audio(); if (!a) return; const t0 = a.currentTime + 0.1; ['count', 'count', 'count', 'go'].forEach((k, i) => beepAt(k, t0 + i)); setTimeout(() => { const t1 = a.currentTime + 0.1; ['count', 'count', 'count', 'stop'].forEach((k, i) => beepAt(k, t1 + i)); }, 5200); toast('Into work: 3-2-1-go. Then out of work: 3-2-1-stop.', 9000); };
 
 /* ---------- backup: your timers, favourites and settings in one file ---------- */
@@ -472,7 +472,16 @@ function confirmHR() { const n = Date.now(); if (n - hrArm < 3000) { hrArm = 0; 
 $('#ver').textContent = VERSION; $('#aboutVer').textContent = VERSION;
 $('#btnUpdates').href = 'https://rounds.anonacondacodelab.com/android.html?v=' + VERSION;   // the page says whether a newer version exists
 $('#zonesBox').hidden = !(window.HR && HR.supported);   // zones need a strap, so only where Bluetooth works
-renderZoneSettings(); renderHome(); drawHR();
+/* a one-time card on the start screen pointing to zone setup: only where Bluetooth works, and only until zones are
+   set up or "Not now" is tapped */
+const drawZoneTip = () => { $('#zoneTip').hidden = !(window.HR && HR.supported) || !!zScale() || store.get('zoneTip', '') === 'done'; };
+$('#btnTipLater').onclick = () => { store.set('zoneTip', 'done'); drawZoneTip(); };
+$('#btnTipSetup').onclick = () => {
+  store.set('zoneTip', 'done'); drawZoneTip();
+  if (!settings.zones.on) { settings.zones.on = true; store.set('settings', settings); renderZoneSettings(); }
+  show('settings'); $('#zonesBox').scrollIntoView({ block: 'start' }); $('#zMax').focus({ preventScroll: true });
+};
+renderZoneSettings(); renderHome(); drawHR(); drawZoneTip();
 /* Android Back button: back inside the app; on the home screen or during a timer the app moves to the background */
 window.appBack = () => {
   const scr = document.body.dataset.screen || 'home';

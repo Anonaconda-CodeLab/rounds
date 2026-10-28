@@ -131,7 +131,8 @@ suits people whose resting heart rate is unusually low or high.
 | Z4 | 80–90% | Hard |
 | Z5 | 90–100% | Maximum |
 
-Settings shows the heart-rate range of each zone for your numbers. You only set this up once: it is stored on this
+Until you do, a small card on the start screen offers **Set up zones** (or **Not now**, which hides it for good;
+the setting stays in Settings). Settings shows the heart-rate range of each zone for your numbers. You only set this up once: it is stored on this
 device with your timers, and *Save timers to file* includes it.
 
 While a strap is connected, a ring of the five zones appears around the timer, with a marker at your current heart
