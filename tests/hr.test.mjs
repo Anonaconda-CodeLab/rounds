@@ -50,6 +50,10 @@ test('zones: share of max, or of heart-rate reserve with a resting rate', () => 
   assert.equal(H.zoneOf(168, k).zone, 5);
   assert.deepEqual(H.zoneBpm(k), [120, 132, 144, 156, 168, 180]);
   assert.deepEqual(H.zoneBpm(s), [90, 108, 126, 144, 162, 180]);
+  // 183 max, 60 resting: 70% is 146.1 bpm, so zone 3 starts at 147, as zoneOf says
+  const f = H.zoneScale({ on: true, max: 183, rest: 60 }), b = H.zoneBpm(f);
+  assert.equal(b[2], 147); assert.equal(H.zoneOf(146, f).zone, 2); assert.equal(H.zoneOf(147, f).zone, 3);
+  for (let i = 0; i < 5; i++) { assert.equal(H.zoneOf(b[i], f).zone, i + 1); assert.equal(H.zoneOf(b[i] - 1, f).zone, i); }
 });
 
 test('time in zones: each reading counts until the next; gaps and jumps back are left out', () => {

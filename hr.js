@@ -48,7 +48,8 @@
     return { zone, pct };
   }
   // the lowest bpm of each zone, and the max (for the table in Settings)
-  const zoneBpm = s => ZONE_FLOOR.map(p => Math.round(s.rest + (s.max - s.rest) * p / 100)).concat(s.max);
+  // rounded up, so the first bpm shown for a zone is the first one zoneOf puts in it (1e-9: floating-point slack)
+  const zoneBpm = s => ZONE_FLOOR.map(p => Math.ceil(s.rest + (s.max - s.rest) * p / 100 - 1e-9)).concat(s.max);
   // seconds spent in each zone [below, z1..z5]. Each reading counts until the next one; gaps over 5 s (strap dropped out,
   // a skip forward) and jumps back (Back button) are not counted.
   function zoneTimes(samples, s) {

@@ -42,3 +42,11 @@ test('release workflow: three jobs; only publish can write, only sign sees the k
   assert.match(publish, /android-preview/);
   assert.match(publish, /android-test/);
 });
+
+test('workflows: every action is pinned to a full commit (a moved tag cannot change what runs)', () => {
+  for (const f of ['.github/workflows/android.yml', '.github/workflows/ci.yml']) {
+    const uses = [...r(f).matchAll(/uses:\s*(\S+)/g)].map(m => m[1]);
+    assert.ok(uses.length > 0, f);
+    for (const u of uses) assert.match(u, /^[\w.-]+\/[\w.-]+@[0-9a-f]{40}$/, `${f}: ${u}`);
+  }
+});

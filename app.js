@@ -13,7 +13,7 @@ const store = {
 let mine = store.get('timers', []).map(E.normalize).filter(t => t.id);
 const settings = Object.assign({ voice: false, vibrate: true, half: false }, store.get('settings', {}));
 const ZONES0 = { on: false, max: 0, age: 0, rest: 0 };   // heart-rate zones: max entered, or age for an estimate; resting optional
-const cleanZones = z => { const o = Object.assign({}, ZONES0); if (z && typeof z === 'object') { o.on = z.on === true; for (const k of ['max', 'age', 'rest']) { const v = Math.round(+z[k]); o[k] = v > 0 && v < 300 ? v : 0; } } return o; };
+const cleanZones = z => { const o = Object.assign({}, ZONES0); if (z && typeof z === 'object') { o.on = z.on === true; for (const k of ['max', 'age', 'rest']) { const x = z[k], v = typeof x === 'number' || typeof x === 'string' ? Math.round(+x) : 0; o[k] = v > 0 && v < 300 ? v : 0; } } return o; };
 settings.zones = cleanZones(settings.zones);
 const saveMine = () => store.set('timers', mine);
 let favs = new Set(store.get('favs', []));
@@ -233,7 +233,9 @@ function cancelBeeps(futureOnly) {
 }
 
 /* ---------- run ---------- */
-const R = { hr: [], t: null, segs: [], beeps: [], t0: 0, paused: false, pauseAt: 0, idx: -1, done: false, raf: 0, iv: 0 };
+const R = { hr: [], t: null, segs: [], beeps: [], t0: 0, paused: false, pauseAt: 0, idx: -1, done: false, raf: 0, iv: 0, lastT: 0, ran: 0, worked: new Set() };
+/* what the timer really did since the last look (skips and Back don't count), for the finish screen when ended early */
+function tally(t) { const a = E.advance(R.segs, R.lastT, t); R.ran += a.ran; for (const i of a.ended) R.worked.add(i); R.lastT = t; }
 const now = () => performance.now() / 1000;
 const curT = () => R.paused ? R.pauseAt : now() - R.t0;
 /* All remaining beeps go to the audio clock, so they stay on time even if the screen is busy. They are scheduled earlier
@@ -273,7 +275,7 @@ function vibrate(p) { if (settings.vibrate && NATIVE) { AppNative.vibrate(p); re
 
 function startRun(t) {
   R.t = E.normalize(t); R.segs = E.compile(R.t, Date.now()); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
-  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false; R.hr = []; $('#fHR').hidden = true; $('#fZones').hidden = true;
+  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false; R.hr = []; R.lastT = 0; R.ran = 0; R.worked = new Set(); $('#fHR').hidden = true; $('#fZones').hidden = true;
   $('#rName').textContent = R.t.name; $('#finish').hidden = true; setPaused(false); disarmEnd();
   document.body.dataset.phase = 'ready'; show('run'); drawHR();
   audio(); schedule(); keepAwake(); speak('Get ready');
@@ -289,6 +291,7 @@ function phaseWords(g) {
 function render() {
   if (document.body.dataset.screen !== 'run' || R.done) return;
   const t = curT(), total = E.totalDuration(R.segs), L = E.locate(R.segs, t), g = L.seg;
+  tally(Math.min(t, total));
   if (t >= total) return finish();
   checkDrift();
   if (L.i !== R.idx) {
@@ -328,8 +331,8 @@ function finish(early) {
   document.body.dataset.phase = 'done';
   if (early) {
     clearTimeout(R.sayT); cancelBeeps(); try { speechSynthesis.cancel(); } catch (e) {}
-    const d = E.doneSoFar(R.segs, t);
-    $('#fDone').textContent = `Ended early · ${d.workDone} of ${d.workTotal} work round${d.workTotal === 1 ? '' : 's'} · ${E.fmtTime(d.elapsed)}`;
+    tally(t); const n = R.segs.filter(g => g.kind === 'work').length;
+    $('#fDone').textContent = `Ended early · ${R.worked.size} of ${n} work round${n === 1 ? '' : 's'} · ${E.fmtTime(Math.round(R.ran))}`;
   } else {
     const work = R.segs.filter(g => g.kind === 'work');
     $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
@@ -346,6 +349,7 @@ function setPaused(p) {
 }
 function seek(t) {   // jump to time t (seconds from Start)
   t = Math.max(0, Math.min(t, E.totalDuration(R.segs) - 0.05));
+  tally(curT()); R.lastT = t;   // count what ran up to now; the jump itself is not workout time
   if (R.paused) R.pauseAt = t; else R.t0 = now() - t;
   R.idx = -2; if (!R.paused) schedule(); render();
 }
@@ -420,7 +424,8 @@ function drawZones() {
   $('#zMk').style.transform = `rotate(${(Z_START + Z_SPAN * f).toFixed(1)}deg)`;
   $('#zNum').textContent = z.zone ? 'Z' + z.zone : '–';
   $('#zPct').textContent = z.zone ? `${Math.round(z.pct)}% ${s.rest ? 'HRR' : 'MAX'}` : 'BELOW Z1';
-  lab.setAttribute('aria-label', z.zone ? `Heart-rate zone ${z.zone}, ${ZONE_NAMES[z.zone - 1]}` : 'Below heart-rate zone 1');
+  lab.setAttribute('aria-label', (z.zone ? `Heart-rate zone ${z.zone}, ${ZONE_NAMES[z.zone - 1]}` : 'Below heart-rate zone 1') +
+    `, ${Math.round(z.pct)}% of ${s.rest ? 'heart-rate reserve' : 'max heart rate'}`);
 }
 function drawZoneTimes() {
   const s = zScale(), box = $('#fZones');
@@ -440,8 +445,14 @@ function renderZoneSettings() {
   $('#sZones').checked = c.on; $('#zFields').hidden = !c.on;
   for (const [id, k] of [['#zMax', 'max'], ['#zAge', 'age'], ['#zRest', 'rest']]) if (document.activeElement !== $(id)) $(id).value = c[k] || '';
   const note = $('#zNote'), tbl = $('#zTable');
-  if (!s) { note.textContent = 'Enter your max heart rate if you know it, or your age to estimate it.'; tbl.innerHTML = ''; return; }
-  note.textContent = (s.estimated ? `Max ${s.max} bpm, estimated from your age (208 − 0.7 × age). Estimates can be 10 bpm or more out, so a max you have measured is better.`
+  // the same ranges as HR.zoneScale: a value it can't use is flagged, not silently ignored
+  const bad = { max: c.max && !(c.max >= 100 && c.max <= 230), age: c.age && !(c.age >= 10 && c.age <= 100) && !(s && !s.estimated),
+    rest: c.rest && s && !s.rest };
+  $('#zMax').toggleAttribute('aria-invalid', !!bad.max); $('#zAge').toggleAttribute('aria-invalid', !!bad.age); $('#zRest').toggleAttribute('aria-invalid', !!bad.rest);
+  const warn = [bad.max && 'Max heart rate must be between 100 and 230 bpm.', bad.age && 'Age must be between 10 and 100.',
+    bad.rest && s && `Resting heart rate must be between 30 and ${s.max - 40} bpm (at least 40 below your max), so it isn't used.`].filter(Boolean).join(' ');
+  if (!s) { note.textContent = (warn ? warn + ' ' : '') + 'Enter your max heart rate if you know it, or your age to estimate it.'; tbl.innerHTML = ''; return; }
+  note.textContent = (warn ? warn + ' ' : '') + (s.estimated ? `Max ${s.max} bpm, estimated from your age (208 − 0.7 × age). Estimates can be 10 bpm or more out, so a max you have measured is better.`
     : `Max ${s.max} bpm.`) + (s.rest ? ` Zones use your heart-rate reserve (max minus resting ${s.rest} bpm).` : ' Zones are a share of your max.');
   const b = HR.zoneBpm(s);
   tbl.innerHTML = ZONE_NAMES.map((n, i) => `<li><i class="z${i + 1}"></i><b>Z${i + 1}</b><span>${n} · ${HR.ZONE_FLOOR[i]}–${i < 4 ? HR.ZONE_FLOOR[i + 1] : 100}%</span><em>${b[i]}–${i < 4 ? b[i + 1] - 1 : b[5]}</em></li>`).join('');

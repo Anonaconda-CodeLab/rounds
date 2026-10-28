@@ -118,7 +118,7 @@ body[data-phase="done"]{--ph:var(--done);--ph-ink:#fff}
 .ctl.big{width:92px;height:92px;background:var(--ph-ink);color:var(--ph);border-color:var(--ph-ink)}
 .ctl svg{width:26px;height:26px;fill:currentColor;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .ctl.big svg{width:38px;height:38px}
-.finish{position:fixed;inset:0;background:var(--done);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px));text-align:center}
+.finish{position:fixed;inset:0;overflow-y:auto;background:var(--done);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:10px;padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px));text-align:center}
 .finish h2{font-size:64px;margin:0;font-stretch:80%}
 .finish p{font-size:18px;margin:0 0 14px;opacity:.9}
 .finish .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
@@ -247,3 +247,4 @@ i.z0{background:var(--z0)} i.z1{background:var(--z1)} i.z2{background:var(--z2)}
 .tip p{margin:0;font-size:15px}
 .tip-h{color:var(--accent)}
 .tip .btn{padding:9px 18px;font-size:15px}
+.field input[aria-invalid]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}

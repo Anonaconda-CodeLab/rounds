@@ -222,11 +222,14 @@ const PRESETS = [
 // there is in total. All-out sprint work ranks above steady hard work; self-paced sessions sit lower.
 const HARDEST = ['p-tabata', 'p-gibalasit', 'p-4x4', 'p-hiit4020', 'p-boxing', 'p-little', 'p-gibala10', 'p-102030', 'p-3030',
   'p-tempo', 'p-amrap15', 'p-pyramid', 'p-oneminute', 'p-emom10', 'p-fartlek', 'p-plank'];
-/* what was done by time t (seconds from Start), for the finish screen when a timer is ended early: work rounds finished
-   (a work round still under way doesn't count) and time since "get ready" */
-function doneSoFar(segs, t) {
-  const work = segs.filter(g => g.kind === 'work');
-  return { workDone: work.filter(g => g.start + g.dur <= t + 0.5).length, workTotal: work.length, elapsed: Math.max(0, Math.round(t - LEAD_IN)) };
+/* the timer ran on its own from time a to time b (seconds from Start; not a skip or Back): how much of that was workout
+   time (after "get ready"), and which work rounds it finished. Adding these up gives what was really done, for the finish
+   screen when a timer is ended early, however much was skipped. */
+function advance(segs, a, b) {
+  if (!(b > a)) return { ran: 0, ended: [] };
+  const ended = [];
+  segs.forEach((g, i) => { const end = g.start + g.dur; if (g.kind === 'work' && end > a && end <= b + 0.05) ended.push(i); });
+  return { ran: Math.max(0, b - Math.max(a, LEAD_IN)), ended };
 }
-const Engine = { HARDEST, KIND_LABEL, LEAD_IN, GOALS, normalize, compile, roundSteps, fartlekSteps, totalDuration, beepPlan, locate, fmtTime, parseTime, summary, doneSoFar, PRESETS };
+const Engine = { HARDEST, KIND_LABEL, LEAD_IN, GOALS, normalize, compile, roundSteps, fartlekSteps, totalDuration, beepPlan, locate, fmtTime, parseTime, summary, advance, PRESETS };
 if (typeof module !== 'undefined' && module.exports) module.exports = Engine; else globalThis.Engine = Engine;
