@@ -54,13 +54,13 @@
       <li>Three short beeps, one per second, count you <b>into</b> every work round, then a long <b>high</b> beep: go.</li>
       <li>Three short beeps count you <b>out</b> of every work round, then a long <b>low</b> beep: stop.</li>
       <li>Turn the phone's <b>media volume</b> up; the beeps are high-pitched so they carry over music and traffic.</li>
-      <li>Heart rate (optional): tap <b>♥</b> at the top of this screen, or beside the dial during a timer, to connect a Bluetooth strap or watch that shares heart rate (Polar, Garmin, Wahoo, Coospo and most others). <span class="browser-req">Needs Chrome or Chromium on Android or a computer, or Bluefy on iPhone and iPad.</span> Readings are only shown, never saved or sent.</li>
+      <li>Heart rate (optional): tap <b>♥</b> at the top of this screen, or beside the dial during a timer, to connect a Bluetooth strap or watch that shares heart rate (Polar, Garmin, Wahoo, Coospo and most others). <span class="browser-req">Needs Chrome or Chromium on Android or a computer, or Bluefy on iPhone and iPad.</span> Readings are only shown, never saved or sent. Set up <b>heart-rate zones</b> in Settings to see your zone around the timer.</li>
       <li>The screen stays on while a timer runs. Add Rounds to your home screen and it works offline.</li>
     </ul>
   </details>
   <footer class="foot">
-    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">a small donation</a>. It's made by one person, with no ads or tracking. Thank you!</p>
-    <p>Free and open source. No account, no ads, no tracking: your timers stay on this device.</p>
+    <p class="thanks">No ads, no tracking. If you find this app useful, please consider making <a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">a small donation</a> to help fund development. Thank you!</p>
+    <p>Free and open source. No account: your timers stay on this device.</p>
     <p><a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">☕ Support on Ko-fi</a> · <a href="https://anonacondacodelab.com" rel="noopener noreferrer">Anonaconda Code Lab</a></p>
     <p class="fine">© 2026 Anonaconda Code Lab · GNU GPL v3 or later · version <span id="ver"></span></p>
   </footer>
@@ -118,6 +118,20 @@
     <label class="switch"><input type="checkbox" id="sVibrate"><span class="track"><span class="knob"></span></span><span>Vibrate at each change<small>when the phone supports it</small></span></label>
     <label class="switch"><input type="checkbox" id="sHalf"><span class="track"><span class="knob"></span></span><span>Halfway beep<small>one short beep halfway through long work rounds (2 min or more)</small></span></label>
     <button id="btnTest" class="btn">Test the beeps</button>
+    <div class="backup zones" id="zonesBox" hidden>
+      <h3>Heart-rate zones</h3>
+      <label class="switch"><input type="checkbox" id="sZones"><span class="track"><span class="knob"></span></span><span>Show heart-rate zones<small>a coloured ring around the timer while a strap is connected, and your time in each zone at the end</small></span></label>
+      <div id="zFields" class="zfields" hidden>
+        <div class="grid3">
+          <label class="field"><span>Max heart rate</span><input id="zMax" inputmode="numeric" maxlength="3" placeholder="bpm" autocomplete="off" translate="no"></label>
+          <label class="field"><span>or your age</span><input id="zAge" inputmode="numeric" maxlength="3" placeholder="years" autocomplete="off" translate="no"></label>
+          <label class="field"><span>Resting</span><input id="zRest" inputmode="numeric" maxlength="3" placeholder="optional" autocomplete="off" translate="no"></label>
+        </div>
+        <p id="zNote" class="znote"></p>
+        <ol id="zTable" class="ztable"></ol>
+        <p class="znote">Stored only on this device, with your timers. Zones are a guide, not medical advice.</p>
+      </div>
+    </div>
     <div class="backup">
       <h3>Your timers</h3>
       <p>Save your own timers, favourites and settings in one file, to keep as a backup or to move them to another phone or browser.</p>
@@ -147,8 +161,10 @@
       <circle id="rArc" class="ring" cx="100" cy="100" r="88" pathLength="1000"/>
       <circle id="rDot" class="ring-dot" cx="100" cy="12" r="7"/>
     </svg>
+    <div id="zRing" class="zring" hidden aria-hidden="true"><svg viewBox="0 0 200 200"><path id="zBed" class="zbed"/><g id="zSegs"></g><g id="zMk"><path class="zmk" d="M100 6.5L104.5 -1.5L95.5 -1.5Z"/></g></svg></div>
     <div class="dial-in"><span id="rTime" class="time" aria-live="off">0:03</span><span id="rRound" class="round"></span></div>
     <button id="btnHR" class="hr" hidden aria-label="Connect a heart-rate strap" title="Heart rate"><span class="hr-h" aria-hidden="true">♥</span><b id="hrVal">+</b><small id="hrSub">HR</small></button>
+    <div id="zLab" class="zlab" hidden role="img" aria-label="Heart-rate zone" translate="no"><b id="zNum">–</b><small id="zPct">ZONE</small></div>
   </div>
   <p id="rNext" class="next"></p>
   <div class="progress"><span id="rBar"></span></div>
@@ -162,6 +178,7 @@
     <h2>Done!</h2>
     <p id="fDone" translate="no"></p>
     <p id="fHR" translate="no" class="f-hr" hidden></p>
+    <div id="fZones" class="f-zones" hidden translate="no"><h3>Time in each zone</h3><div id="fZBar" class="zbar" aria-hidden="true"></div><ul id="fZList"></ul></div>
     <div class="acts"><button id="btnAgain" class="btn primary">Again</button><button id="btnHome" class="btn">Home</button></div>
   </div>
 </section>

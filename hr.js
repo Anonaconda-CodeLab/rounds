@@ -25,7 +25,41 @@
     }
     return { avg, peak: Math.max(avg, Math.round(peak)) };
   }
-  const api = { parseHR, hrStats };
+  /* ---- heart-rate zones: five zones as a share of max heart rate, or of heart-rate reserve when a resting heart rate
+     is given (Karvonen). Zone 1 starts at 50%, then every 10%; below 50% is "below zone 1" (zone 0). ---- */
+  const ZONE_FLOOR = [50, 60, 70, 80, 90];
+  const tanaka = age => Math.round(208 - 0.7 * age);   // Tanaka, Monahan & Seals 2001: an estimate, often off by ±10 bpm
+  const num = v => typeof v === 'number' && Number.isFinite(v) ? v : +v || 0;
+  // cfg as stored in settings: { on, max, age, rest }; returns null when zones are off or not set up
+  function zoneScale(cfg) {
+    if (!cfg || !cfg.on) return null;
+    const m = num(cfg.max), age = num(cfg.age), r = num(cfg.rest);
+    const estimated = !(m >= 100 && m <= 230);
+    const max = !estimated ? Math.round(m) : age >= 10 && age <= 100 ? tanaka(age) : 0;
+    if (!max) return null;
+    const rest = r >= 30 && r <= max - 40 ? Math.round(r) : 0;
+    return { max, rest, estimated, age: estimated ? Math.round(age) : 0 };
+  }
+  // pct is the share of max (or of the reserve); zone 0 = below zone 1
+  function zoneOf(bpm, s) {
+    const pct = s.rest ? 100 * (bpm - s.rest) / (s.max - s.rest) : 100 * bpm / s.max;
+    let zone = 0;
+    for (let i = 0; i < 5; i++) if (pct >= ZONE_FLOOR[i]) zone = i + 1;
+    return { zone, pct };
+  }
+  // the lowest bpm of each zone, and the max (for the table in Settings)
+  const zoneBpm = s => ZONE_FLOOR.map(p => Math.round(s.rest + (s.max - s.rest) * p / 100)).concat(s.max);
+  // seconds spent in each zone [below, z1..z5]. Each reading counts until the next one; gaps over 5 s (strap dropped out,
+  // a skip forward) and jumps back (Back button) are not counted.
+  function zoneTimes(samples, s) {
+    const secs = [0, 0, 0, 0, 0, 0];
+    for (let i = 0; i + 1 < samples.length; i++) {
+      const dt = samples[i + 1].t - samples[i].t;
+      if (dt > 0 && dt <= 5 && samples[i].bpm) secs[zoneOf(samples[i].bpm, s).zone] += dt;
+    }
+    return secs.map(Math.round);
+  }
+  const api = { parseHR, hrStats, ZONE_FLOOR, tanaka, zoneScale, zoneOf, zoneBpm, zoneTimes };
   if (typeof module === 'object' && module.exports) { module.exports = api; return; }
 
   const HR = root.HR = Object.assign(api, { supported: !!(root.navigator && navigator.bluetooth), bpm: 0, last: 0, device: null, state: 'off', onchange: null });

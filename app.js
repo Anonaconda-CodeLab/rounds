@@ -1,7 +1,7 @@
 /* Rounds: screens, storage, sound. Everything stays on this device.
    Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
 'use strict';
-const VERSION = '1.3.1';
+const VERSION = '1.4.0';
 const $ = s => document.querySelector(s);
 const E = window.Engine;
 
@@ -12,6 +12,9 @@ const store = {
 };
 let mine = store.get('timers', []).map(E.normalize).filter(t => t.id);
 const settings = Object.assign({ voice: false, vibrate: true, half: false }, store.get('settings', {}));
+const ZONES0 = { on: false, max: 0, age: 0, rest: 0 };   // heart-rate zones: max entered, or age for an estimate; resting optional
+const cleanZones = z => { const o = Object.assign({}, ZONES0); if (z && typeof z === 'object') { o.on = z.on === true; for (const k of ['max', 'age', 'rest']) { const v = Math.round(+z[k]); o[k] = v > 0 && v < 300 ? v : 0; } } return o; };
+settings.zones = cleanZones(settings.zones);
 const saveMine = () => store.set('timers', mine);
 let favs = new Set(store.get('favs', []));
 const saveFavs = () => store.set('favs', [...favs]);
@@ -173,7 +176,7 @@ function saveFile(name, text) {
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
 $('#btnSaveTimers').onclick = () => {
-  if (!mine.length && !favs.size) { toast('You have no timers of your own yet.'); return; }
+  if (!mine.length && !favs.size && !settings.zones.on) { toast('You have no timers of your own yet.'); return; }
   const d = new Date(), p = n => String(n).padStart(2, '0');
   const data = { app: 'Rounds', kind: 'timers', version: VERSION, saved: d.toISOString(), timers: mine, favs: [...favs], settings, goal, hard };
   saveFile(`Rounds-timers-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.json`, JSON.stringify(data, null, 1));
@@ -191,7 +194,9 @@ $('#timersIn').onchange = async e => {
   if (Array.isArray(data.favs)) { for (const id of data.favs) if (ids.has(id)) favs.add(id); saveFavs(); }
   if (data.settings && typeof data.settings === 'object') {
     for (const k of ['voice', 'vibrate', 'half']) if (typeof data.settings[k] === 'boolean') settings[k] = data.settings[k];
+    if (data.settings.zones && typeof data.settings.zones === 'object') settings.zones = cleanZones(data.settings.zones);
     store.set('settings', settings); $('#sVoice').checked = settings.voice; $('#sVibrate').checked = settings.vibrate; $('#sHalf').checked = settings.half;
+    renderZoneSettings();
   }
   renderHome();
   toast(added || updated ? `Imported ${added + updated} timer${added + updated === 1 ? '' : 's'}${updated ? ` (${updated} replaced)` : ''}.` : 'No timers in that file.', 4000);
@@ -268,9 +273,9 @@ function vibrate(p) { if (settings.vibrate && NATIVE) { AppNative.vibrate(p); re
 
 function startRun(t) {
   R.t = E.normalize(t); R.segs = E.compile(R.t, Date.now()); R.beeps = E.beepPlan(R.segs).concat(halfBeeps(R.segs));
-  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false; R.hr = []; $('#fHR').hidden = true; drawHR();
+  R.t0 = now(); R.paused = false; R.idx = -1; R.done = false; R.hr = []; $('#fHR').hidden = true; $('#fZones').hidden = true;
   $('#rName').textContent = R.t.name; $('#finish').hidden = true; setPaused(false); disarmEnd();
-  document.body.dataset.phase = 'ready'; show('run');
+  document.body.dataset.phase = 'ready'; show('run'); drawHR();
   audio(); schedule(); keepAwake(); speak('Get ready');
   cancelAnimationFrame(R.raf); clearInterval(R.iv);
   const loop = () => { render(); if (!R.done) R.raf = requestAnimationFrame(loop); };
@@ -322,6 +327,7 @@ function finish() {
   $('#fDone').textContent = `${work.length} work round${work.length === 1 ? '' : 's'} · ${E.fmtTime(E.totalDuration(R.segs) - E.LEAD_IN)} in total`;
   const hs = window.HR ? HR.hrStats(R.hr) : null;
   $('#fHR').hidden = !hs; if (hs) $('#fHR').textContent = `♥ Work rounds: ${hs.avg} bpm average · ${hs.peak} peak`;
+  drawZoneTimes();
   $('#finish').hidden = false; clearTimeout(R.sayT); setTimeout(() => speak('Finished. Well done.'), 1200);   // after the finishing beeps vibrate([200, 100, 200, 100, 400]);
 }
 function setPaused(p) {
@@ -366,6 +372,71 @@ function drawHR() {
   $('#hrSub').textContent = st === 'off' ? 'HR' : st === 'connecting' ? '…' : 'BPM';
   if (HR.bpm) b.style.setProperty('--beat', (60 / HR.bpm).toFixed(2) + 's');
   b.setAttribute('aria-label', st === 'off' ? 'Connect a heart-rate strap' : `Heart rate ${HR.bpm || 'not available'}. Tap to disconnect`);
+  drawZones();
+}
+
+/* ---------- heart-rate zones (optional): a ring of five zones outside the countdown ring ---------- */
+const Z_START = 240, Z_SPAN = 240, Z_R = 91;   // degrees clockwise from 12 o'clock: from 8 o'clock round to 4 o'clock
+const ZONE_NAMES = ['Very light', 'Light', 'Moderate', 'Hard', 'Maximum'];
+function zArc(a0, a1) {
+  const pt = a => { const t = a * Math.PI / 180; return [(100 + Z_R * Math.sin(t)).toFixed(2), (100 - Z_R * Math.cos(t)).toFixed(2)]; };
+  const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
+  return `M${x0} ${y0}A${Z_R} ${Z_R} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1} ${y1}`;
+}
+(function buildZoneRing() {
+  const seg = Z_SPAN / 5, ns = 'http://www.w3.org/2000/svg';
+  $('#zBed').setAttribute('d', zArc(Z_START + 1, Z_START + Z_SPAN - 1));
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('class', 'zseg z' + (i + 1)); p.setAttribute('d', zArc(Z_START + i * seg + 1.5, Z_START + (i + 1) * seg - 1.5));
+    $('#zSegs').appendChild(p);
+  }
+})();
+const zScale = () => window.HR && HR.zoneScale ? HR.zoneScale(settings.zones) : null;
+function drawZones() {
+  const s = zScale(), ring = $('#zRing'), lab = $('#zLab');
+  // shown only with zones set up and a strap connected (or reconnecting); otherwise the run screen is unchanged
+  const show = !!s && HR.state !== 'off';
+  ring.hidden = lab.hidden = !show; if (!show) return;
+  const z = HR.fresh() ? HR.zoneOf(HR.bpm, s) : null;
+  ring.classList.toggle('stale', !z); lab.classList.toggle('stale', !z);
+  [...$('#zSegs').children].forEach((p, i) => p.classList.toggle('on', !!z && z.zone === i + 1));
+  $('#zMk').setAttribute('visibility', z ? 'visible' : 'hidden');
+  lab.dataset.z = z ? z.zone : '';
+  if (!z) { $('#zNum').textContent = '–'; $('#zPct').textContent = 'ZONE'; lab.setAttribute('aria-label', 'Heart-rate zone: no reading'); return; }
+  const f = Math.max(0, Math.min(1, (z.pct - 50) / 50));
+  $('#zMk').style.transform = `rotate(${(Z_START + Z_SPAN * f).toFixed(1)}deg)`;
+  $('#zNum').textContent = z.zone ? 'Z' + z.zone : '–';
+  $('#zPct').textContent = z.zone ? `${Math.round(z.pct)}% ${s.rest ? 'HRR' : 'MAX'}` : 'BELOW Z1';
+  lab.setAttribute('aria-label', z.zone ? `Heart-rate zone ${z.zone}, ${ZONE_NAMES[z.zone - 1]}` : 'Below heart-rate zone 1');
+}
+function drawZoneTimes() {
+  const s = zScale(), box = $('#fZones');
+  const secs = s ? HR.zoneTimes(R.hr, s) : [], total = secs.reduce((a, b) => a + b, 0);
+  box.hidden = total < 20; if (box.hidden) return;   // like average and peak: left out without enough readings
+  const bar = $('#fZBar'), list = $('#fZList'); bar.innerHTML = ''; list.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    if (secs[i]) { const c = document.createElement('i'); c.className = 'z' + i; c.style.flexGrow = secs[i]; bar.appendChild(c); }
+    if (i === 0 && !secs[0]) continue;
+    const li = document.createElement('li');
+    li.innerHTML = `<i class="z${i}"></i><span>${i ? 'Z' + i : 'Below'}</span><b>${E.fmtTime(secs[i])}</b>`;
+    list.appendChild(li);
+  }
+}
+function renderZoneSettings() {
+  const c = settings.zones, s = zScale();
+  $('#sZones').checked = c.on; $('#zFields').hidden = !c.on;
+  for (const [id, k] of [['#zMax', 'max'], ['#zAge', 'age'], ['#zRest', 'rest']]) if (document.activeElement !== $(id)) $(id).value = c[k] || '';
+  const note = $('#zNote'), tbl = $('#zTable');
+  if (!s) { note.textContent = 'Enter your max heart rate if you know it, or your age to estimate it.'; tbl.innerHTML = ''; return; }
+  note.textContent = (s.estimated ? `Max ${s.max} bpm, estimated from your age (208 − 0.7 × age). Estimates can be 10 bpm or more out, so a max you have measured is better.`
+    : `Max ${s.max} bpm.`) + (s.rest ? ` Zones use your heart-rate reserve (max minus resting ${s.rest} bpm).` : ' Zones are a share of your max.');
+  const b = HR.zoneBpm(s);
+  tbl.innerHTML = ZONE_NAMES.map((n, i) => `<li><i class="z${i + 1}"></i><b>Z${i + 1}</b><span>${n} · ${HR.ZONE_FLOOR[i]}–${i < 4 ? HR.ZONE_FLOOR[i + 1] : 100}%</span><em>${b[i]}–${i < 4 ? b[i + 1] - 1 : b[5]}</em></li>`).join('');
+}
+$('#sZones').onchange = e => { settings.zones.on = e.target.checked; store.set('settings', settings); renderZoneSettings(); };
+for (const [id, k] of [['#zMax', 'max'], ['#zAge', 'age'], ['#zRest', 'rest']]) {
+  $(id).oninput = e => { const v = parseInt(e.target.value.replace(/\D/g, ''), 10); settings.zones[k] = v > 0 && v < 300 ? v : 0; store.set('settings', settings); renderZoneSettings(); };
 }
 if (window.HR) {
   HR.onchange = () => {
@@ -388,7 +459,8 @@ function confirmHR() { const n = Date.now(); if (n - hrArm < 3000) { hrArm = 0; 
 /* ---------- start ---------- */
 $('#ver').textContent = VERSION; $('#aboutVer').textContent = VERSION;
 $('#btnUpdates').href = 'https://rounds.anonacondacodelab.com/android.html?v=' + VERSION;   // the page says whether a newer version exists
-renderHome(); drawHR();
+$('#zonesBox').hidden = !(window.HR && HR.supported);   // zones need a strap, so only where Bluetooth works
+renderZoneSettings(); renderHome(); drawHR();
 /* Android Back button: back inside the app; on the home screen or during a timer the app moves to the background */
 window.appBack = () => {
   const scr = document.body.dataset.screen || 'home';

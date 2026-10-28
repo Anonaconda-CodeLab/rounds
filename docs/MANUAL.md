@@ -114,6 +114,32 @@ rounds. Readings are only shown, never saved or sent. Tap ♥ twice to disconnec
 In a browser this needs Chrome or Chromium on Android or a computer, or the free Bluefy browser on iPhone and iPad. If
 the browser can't use Bluetooth, the ♥ button simply doesn't appear.
 
+### Heart-rate zones
+
+Turn on **Settings → Heart-rate zones** and enter your **max heart rate**. If you don't know it, enter your **age**
+instead and Rounds estimates it with the Tanaka formula (208 − 0.7 × age). Estimates can be 10 bpm or more out either
+way, so a max you have measured (for example, the highest reading at the end of a very hard effort) is better. Add your
+**resting heart rate** if you like: the zones are then based on your heart-rate reserve (max minus resting), which
+suits people whose resting heart rate is unusually low or high.
+
+| Zone | Share of max (or of reserve) | Feels |
+|---|---|---|
+| Z1 | 50–60% | Very light |
+| Z2 | 60–70% | Light |
+| Z3 | 70–80% | Moderate |
+| Z4 | 80–90% | Hard |
+| Z5 | 90–100% | Maximum |
+
+Settings shows the heart-rate range of each zone for your numbers. You only set this up once: it is stored on this
+device with your timers, and *Save timers to file* includes it.
+
+While a strap is connected, a ring of the five zones appears around the timer, with a marker at your current heart
+rate and your zone (for example **Z4 · 86% MAX**, or **% HRR** with a resting heart rate) at the bottom left of the
+dial. If readings stop, the ring dims and the zone shows **–** until they come back. Without a strap, or with zones
+not set up, the timer looks as it always has. The finish screen shows how long you spent in each zone.
+
+Zones are a guide for training, not medical advice.
+
 ## Backing up your timers
 
 In **Settings → Your timers**:
@@ -127,7 +153,7 @@ Your timers are stored in the browser on this device. Clearing the browser's sit
 now and then if you have many.
 
 ## Privacy
-Rounds has no server, no account and no tracking. Your timers stay on your device, and heart rate is shown only, never saved or sent. Opening the web app is an ordinary visit to its website, like any page; after that, the only thing it ever asks that website for is a newer copy of itself, so updates arrive. The Android app has no internet permission at all.
+Rounds has no server, no account and no tracking. Your timers and heart-rate zone settings stay on your device, and heart rate is shown only, never saved or sent. Opening the web app is an ordinary visit to its website, like any page; after that, the only thing it ever asks that website for is a newer copy of itself, so updates arrive. The Android app has no internet permission at all.
 
 **Translating the page.** If you use your browser's *Translate* button, the browser sends the page's text to its translation service (Google's, in Chrome). Rounds marks your timer names and heart rate so the translator leaves them out: only the app's own buttons and labels are translated.
 

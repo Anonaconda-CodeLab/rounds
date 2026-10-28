@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.0
+- **Heart-rate zones** (optional, in Settings): enter your max heart rate, or your age to estimate it
+  (208 − 0.7 × age), and optionally your resting heart rate to base the zones on heart-rate reserve. While a strap is
+  connected, a ring of five coloured zones around the timer shows which zone you're in, and the finish screen shows
+  your time in each zone. Stored only on this device, and included in *Save timers to file*.
+- New thank-you line at the bottom of the start screen.
+- Android releases are built in three steps, so the signing key and the permission to publish are each used in one
+  place only, and the APK is checked for no internet permission before it is published. Branch builds made by hand
+  are published as the "android-preview" test build.
+
 ## 1.3.1
 - Links open in the same tab, and the page's security policy now blocks all connections (the offline helper
   still fetches newer copies of the app's own files).
