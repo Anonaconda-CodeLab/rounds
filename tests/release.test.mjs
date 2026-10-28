@@ -35,6 +35,8 @@ test('release workflow: three jobs; only publish can write, only sign sees the k
   for (const j of [build, sign]) assert.match(j, /contents: read/);
   assert.ok(!/secrets\./.test(build) && !/secrets\./.test(publish), 'the signing key is used in the sign job only');
   assert.match(sign, /secrets\.LEADONE_KEYSTORE_B64/);
+  assert.match(sign, /\n    environment: signing\n/, 'the sign job uses the protected signing environment');
+  for (const j of [build, publish]) assert.ok(!/environment:/.test(j), 'only the sign job uses an environment');
   assert.match(build, /persist-credentials: false/);
   assert.match(build, /run: node build\.mjs/);
   assert.ok(!/tags:/.test(w.split('jobs:')[0]), 'no tag trigger');

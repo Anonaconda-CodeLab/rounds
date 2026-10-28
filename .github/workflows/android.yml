@@ -9,7 +9,8 @@ name: Android APK
 #   build   - read-only; makes an UNSIGNED APK. npm and Gradle (and every package they run) never see the key,
 #             its password or a token that can write to the repository.
 #   sign    - read-only; runs no code from the repository. Signs that APK with apksigner, then checks it (no internet
-#             permission, signed with the published key).
+#             permission, signed with the published key). The key is kept in the protected "signing" environment,
+#             so every run waits here for the owner's approval.
 #   publish - the only job that can write: creates the release or the pre-release.
 on:
   push:
@@ -79,6 +80,8 @@ jobs:
   sign:
     needs: build
     runs-on: ubuntu-latest
+    # the keystore secrets live in the protected "signing" environment: every run waits here for the owner's approval
+    environment: signing
     permissions:
       contents: read
     outputs:
